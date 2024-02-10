@@ -1,0 +1,30 @@
+{
+    "name": "alt-design/alt-blocker",
+    "description": "Alt Blocker addon, adds IP blocking to your site",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "AltDesign\\AltBlocker\\": "src"
+        }
+    },
+    "require": {
+        "php": "^8.1",
+        "statamic/cms": "^4.0"
+    },
+    "extra": {
+        "statamic": {
+            "name": "Alt Blocker",
+            "description": "Alt Blocker addon"
+        },
+        "laravel": {
+            "providers": [
+                "AltDesign\\AltBlocker\\ServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "pixelfear/composer-dist-plugin": false
+        }
+    }
+}
