@@ -1,50 +1,34 @@
 # Alt Redirect
 
-> Ez pz redirects, simple, spicy and nicey.
+> Ez IP blocking, whitelist or blackist IPs to control who can access your creation.
 
 ## Features
 
-- Redirects to and from
-- Set the status of redirects
-- Regex Redirects
-- Imports and Exports
+- IP Whitelisting and Blacklisting
+- "Blocked" page shown to the user when they get blocked
+- Support for returning a custom view when a request is blocked
+- CSV Imports and Exports
 
 ## How to Install
 
 You can search for this addon in the `Tools > Addons` section of the Statamic control panel and click **install**, or run the following command from your project root:
 
 ``` bash
-composer require alt-design/alt-redirect
+composer require alt-design/alt-blocker
 ```
 
 ## Basic usage
 
-### Simple redirects 
-Just take a request to one URL and redirect to a new url, for example
+Head into your Statamic control panel and find "Alt Blocker" on the left sidebar to bring up the controls for the addon.
 
-From : 
-```
-/old-page
-```
-To : 
-```
-/new-page
-```
+Just take an IP address and add it at the top, then hit save.
 
-### Regex redirects 
-These, other hand, allow much richer redirect functionality.   
-Lets say you changed a wildcard URL path to be a query parameter on a new page, this can done like so
+There is a toggle to toggle between whitelist and blacklist, then you're gravy
 
-From : 
+Example IP : 
 ```
-/old-page/(.*)
+192.168.1.1
 ```
-To : 
-```
-/new-page?wildcard=$1
-```
-
-the '$x' (where x is a number) elements are arranged in the order the corresponding '(.*)' appeared in the 'From' URL, this allows rearranging the regexed fields in the 'To' URL.
 
 ## Questions etc
 
@@ -54,6 +38,7 @@ Also - check out our other addons!
 - [Alt SEO Addon](https://github.com/alt-design/Alt-SEO-Addon)
 - [Alt Sitemap Addon](https://github.com/alt-design/Alt-Sitemap-Addon)
 - [Alt Akismet Addon](https://github.com/alt-design/Alt-Akismet-Addon)
+- [Alt Redirect Addon](https://github.com/alt-design/Alt-Redirect-Addon)
 - [Alt Password Protect Addon](https://github.com/alt-design/Alt-Password-Protect-Addon)
 
 ## Postcardware
