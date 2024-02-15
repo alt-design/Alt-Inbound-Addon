@@ -1,5 +1,5 @@
 <?php
-namespace AltDesign\AltBlocker\Helpers;
+namespace AltDesign\AltInbound\Helpers;
 
 use Illuminate\Support\Facades\File;
 use Statamic\Facades\YAML;

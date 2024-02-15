@@ -1,10 +1,10 @@
 {
-    "name": "alt-design/alt-blocker",
-    "description": "Alt Blocker addon, adds IP blocking to your site",
+    "name": "alt-design/alt-inbound",
+    "description": "Alt Inbound addon, adds IP blocking to your site",
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "AltDesign\\AltBlocker\\": "src"
+            "AltDesign\\AltInbound\\": "src"
         }
     },
     "require": {
@@ -13,12 +13,12 @@
     },
     "extra": {
         "statamic": {
-            "name": "Alt Blocker",
-            "description": "Alt Blocker addon"
+            "name": "Alt Inbound",
+            "description": "Alt Inbound addon"
         },
         "laravel": {
             "providers": [
-                "AltDesign\\AltBlocker\\ServiceProvider"
+                "AltDesign\\AltInbound\\ServiceProvider"
             ]
         }
     },

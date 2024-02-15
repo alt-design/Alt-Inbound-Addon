@@ -1,10 +1,10 @@
 @extends('statamic::layout')
 
 @section('content')
-    <div id="alt-redirect-app" >
+    <div id="alt-inbound-app" >
         <alt-blocker
-            title="Alt Blocker"
-            action="{{ cp_route('alt-blocker.create') }}"
+            title="Alt Inbound"
+            action="{{ cp_route('alt-inbound.create') }}"
             :blueprint='@json($blueprint)'
             :meta='@json($meta)'
             :values='@json($values)'

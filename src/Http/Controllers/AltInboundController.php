@@ -1,5 +1,5 @@
 <?php
-namespace AltDesign\AltBlocker\Http\Controllers;
+namespace AltDesign\AltInbound\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Statamic\Filesystem\Manager;
@@ -7,9 +7,9 @@ use Statamic\Filesystem\Manager;
 use Statamic\Fields\BlueprintRepository;
 use Statamic\Fields\Blueprint;
 
-use AltDesign\AltBlocker\Helpers\Data;
+use AltDesign\AltInbound\Helpers\Data;
 
-class AltBlockerController
+class AltInboundController
 {
 
     public function blacklist(Request $request)
@@ -55,7 +55,7 @@ class AltBlockerController
         // Reset the directory to the old one
 //        Blueprint::setDirectory($oldDirectory);
 
-        return view('alt-blocker::index', [
+        return view('alt-inbound::index', [
             'blueprint' => $blueprint->toPublishArray(),
             'values' => $fields->values(),
             'meta' => $fields->meta(),
