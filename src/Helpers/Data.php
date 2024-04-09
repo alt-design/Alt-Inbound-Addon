@@ -71,17 +71,18 @@ class Data
     public function setBlacklist($state)
     {
         if (!$state) {
-            $this->manager->disk()->delete('content/alt-inbound/blacklist.yaml');
+            $this->manager->disk()->put('content/alt-inbound/whitelist.yaml', Yaml::dump([]));
+
             return;
         }
 
-        $this->manager->disk()->put('content/alt-inbound/blacklist.yaml', Yaml::dump([]));
+        $this->manager->disk()->delete('content/alt-inbound/whitelist.yaml');
         return;
     }
 
-    static public function blacklisting()
+    static public function whiteListing()
     {
-        return (int)((new Manager())->disk()->exists('content/alt-inbound/blacklist.yaml'));
+        return (int)((new Manager())->disk()->exists('content/alt-inbound/whitelist.yaml'));
     }
 
     public function setCustomView($name)

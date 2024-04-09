@@ -12,7 +12,7 @@ class ServiceProvider extends AddonServiceProvider
 
     protected $publishables = [
         __DIR__.'/../resources/dist' => '',
-        __DIR__.'/../resources/img' => '',
+        __DIR__.'/../resources/img' => 'img',
     ];
 
     protected $tags = [

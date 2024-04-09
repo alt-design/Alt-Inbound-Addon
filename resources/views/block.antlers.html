@@ -7,12 +7,12 @@
 </head>
 <body class="relative h-screen w-screen overflow-hidden">
     <!--    Desktop -->
-    <div class="hidden lg:flex items-center justify-center h-screen w-screen"
-        style="background: url('{{ AltInbound:Background }}')">
+    <div class="hidden lg:flex items-center justify-center h-screen w-screen bg-cover bg-center bg-no-repeat"
+        style="background-image: url('{{ AltInbound:Background }}');">
         <div class="z-20 block fixed mx-auto bg-white aspect-square h-3/4 max-h-[600px] rounded-2xl flex flex-col items-center justify-center">
             <img src="{{AltInbound:Blocked}}" class="w-56"/>
             <h1 class="mt-8 mb-4 md:text-2xl lg:text-5xl font-bold text-center">Oops, sorry about this</h1>
-            <h2 class="text-base mt-4 text-center">Site admins have blocked you from this site.</h2>
+            <h2 class="text-base mt-4 text-center">You're not allowed to visit this site.</h2>
             <h2 class="text-base mt-1 text-center">If you think this is an error, please contact site administrators.</h2>
         </div>
     </div>
@@ -23,7 +23,7 @@
         <div class="z-20 fixed mx-auto bg-white w-11/12 aspect-square m-8 rounded-xl flex flex-col items-center justify-center">
             <img src="{{AltInbound:Blocked}}" class="w-36"/>
             <h1 class="text-3xl text-center font-bold mt-4 mb-4">Oops, sorry about this</h1>
-            <h2 class="text-base text-center mb-1 ">Site admins have blocked you from this site.</h2>
+            <h2 class="text-base text-center mb-1 ">You're not allowed to visit this site.</h2>
             <h2 class="text-base text-center">If you think this is an error, please contact site administrators.</h2>
         </div>
     </div>

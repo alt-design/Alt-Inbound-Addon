@@ -27,7 +27,7 @@ export default ({
             search: '',
             fileName: 'Choose a file...',
             selectedPage: '',
-            blacklist: 0,
+            blacklist: 1,
             customView: '',
         }
     },
@@ -159,7 +159,6 @@ export default ({
                     </label>
                     <div class="ml-4 text-sm">Whitelist / Blacklist</div>
                 </div>
-                <input type="text" class="input-text w-1/3 mx-4" @change="viewChanged()" v-model="customView" placeholder="View Name">
                 <input type="text" class="input-text w-1/3" v-model="search" placeholder="Search">
             </div>
             <div class="px-2">
@@ -237,15 +236,22 @@ export default ({
             </div>
         </div>
 
-        <div class="flex justify-between">
-            <div class="w-full xl:w-1/2 card overflow-hidden p-0 mb-4 mt-4 mr-4 px-4 py-4">
+        <div class="flex justify-between flex-wrap">
+            <div class="w-full card overflow-hidden p-0 mb-4 mt-4 px-4 py-4">
+                <span class="font-semibold mb-2">Custom Blocked View</span><br>
+                <p class="text-sm mb-4">Pop your template path here to use a custom view. For example: <code>templates.blocked</code> or <code>templates/blocked</code></p>
+
+                <input type="text" class="input-text w-1/3" @change="viewChanged()" v-model="customView" placeholder="Custom View Template">
+            </div>
+
+            <div class="w-full card overflow-hidden p-0 mb-4 mt-4 px-4 py-4">
                 <span class="font-semibold mb-2">CSV Export</span><br>
                 <p class="text-sm mb-4">Exports CSV of all blocks, use this format on import.</p>
 
                 <a class="btn-primary" :href="cp_url('/alt-design/alt-inbound/export')" download>Export List</a>
             </div>
 
-            <div class="w-full xl:w-1/2 card overflow-hidden p-0 mb-4 mt-4 ml-4 px-4 py-4">
+            <div class="w-full card overflow-hidden p-0 mb-4 mt-4 px-4 py-4">
                 <span class="font-semibold mb-2">CSV Import</span><br>
                 <p class="text-sm mb-4">Import CSV for Blocks, use the export format on import.</p>
 

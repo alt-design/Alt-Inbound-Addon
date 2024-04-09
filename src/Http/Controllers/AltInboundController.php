@@ -49,7 +49,7 @@ class AltInboundController
         // Pre-process the values.
         $fields = $fields->preProcess();
 
-        $blacklist = Data::blacklisting();
+        $blacklist = Data::whitelisting() ? 0 : 1;
 
         // Reset the directory to the old one
 //        Blueprint::setDirectory($oldDirectory);

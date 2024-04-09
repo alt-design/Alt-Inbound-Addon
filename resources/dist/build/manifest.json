@@ -5,12 +5,12 @@
     "src": "resources/css/alt-inbound-addon.css"
   },
   "resources/css/alt-inbound-frontend.css": {
-    "file": "assets/alt-inbound-frontend-4b12cf9f.css",
+    "file": "assets/alt-inbound-frontend-fd1c4f8a.css",
     "isEntry": true,
     "src": "resources/css/alt-inbound-frontend.css"
   },
   "resources/js/alt-inbound-addon.js": {
-    "file": "assets/alt-inbound-addon-11b9aeae.js",
+    "file": "assets/alt-inbound-addon-92113b5a.js",
     "isEntry": true,
     "src": "resources/js/alt-inbound-addon.js"
   },
