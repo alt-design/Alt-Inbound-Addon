@@ -52,6 +52,6 @@ class AltInbound extends Tags
     public function Blocked()
     {
         $vite = (new Vite)->useHotfile( __DIR__ . '/../../resources/dist/hot')->useBuildDirectory('vendor/alt-inbound-addon/build');
-        return $vite->asset('resources/img/stop-blocked-icon.png');
+        return $vite->asset('resources/img/alt-blocked-icon.png');
     }
 }

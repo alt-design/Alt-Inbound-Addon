@@ -12,7 +12,7 @@ export default defineConfig({
                 'resources/css/alt-inbound-frontend.css',
                 'resources/img/alt-gradient-full.png',
                 'resources/img/alt-gradient-mobile.png',
-                'resources/img/stop-blocked-icon.png',
+                'resources/img/alt-blocked-icon.png',
             ],
             publicDirectory: 'resources/dist',
         }),
