@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{ AltInbound:FrontendAssets }}
+</head>
+<body class="relative h-screen w-screen overflow-hidden">
+    <!--    Desktop -->
+    <div class="hidden lg:flex items-center justify-center h-screen w-screen"
+        style="background: url('{{ AltInbound:Background }}')">
+        <div class="z-20 hidden lg:block absolute right-0 bottom-0 m-4">
+            Blocked with Alt Inbound by <a class="underline" href="https://www.alt-design.net/">Alt</a>
+        </div>
+
+        <div class="z-20 block fixed mx-auto bg-white w-1/2 h-2/3 rounded-xl flex flex-col items-center justify-center">
+            <img src="{{AltInbound:Blocked}}" class="w-72"/>
+            <h1 class="w-3/4 md:text-2xl lg:text-5xl text-center">Sorry, the site admins have blocked you from this site.</h1>
+            <h2 class="w-2/3 lg:text-2xl mt-4 text-center">If you think this is an error, please contact site administrators.</h2>
+        </div>
+    </div>
+
+    <!--    Mobile   -->
+    <div class="flex lg:hidden items-center justify-center flex-col  h-screen w-screen"
+         style="background: url('{{ AltInbound:Mobile }}')">
+        <div class="z-20 fixed mx-auto bg-white w-11/12 h-2/3 m-8 rounded-xl flex flex-col items-center justify-center">
+            <img src="{{AltInbound:Blocked}}" class="w-72"/>
+            <h1 class="w-3/4 text-3xl text-center">Sorry, the site admins have blocked you from this site.</h1>
+            <h2 class="w-2/3 lg:text-1xl mt-4 text-center">If you think this is an error, please contact site administrators.</h2>
+        </div>
+    </div>
+    <div class="block lg:hidden bottom-0 left-0 right-0 text-center mx-auto absolute text-base mb-4 z-30">
+        <a href="https://www.alt-design.net/">Blocked with Alt Inbound by <u>Alt</u></a>
+    </div>
+</body>
+</html>

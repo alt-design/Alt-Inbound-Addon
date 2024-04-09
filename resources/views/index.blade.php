@@ -1,8 +1,9 @@
 @extends('statamic::layout')
 
 @section('content')
+    {!! ((new \AltDesign\AltInbound\Tags\AltInbound())->CPAssets()) !!}
     <div id="alt-inbound-app" >
-        <alt-blocker
+        <alt-inbound
             title="Alt Inbound"
             action="{{ cp_route('alt-inbound.create') }}"
             :blueprint='@json($blueprint)'
@@ -10,6 +11,6 @@
             :values='@json($values)'
             :items="{{ json_encode($data) }}"
             :blacklistset="{{$blacklist}}"
-        ></alt-blocker>
+        ></alt-inbound>
     </div>
 @endsection

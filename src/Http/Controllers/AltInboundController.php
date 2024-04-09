@@ -1,5 +1,4 @@
-<?php
-namespace AltDesign\AltInbound\Http\Controllers;
+<?php namespace AltDesign\AltInbound\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Statamic\Filesystem\Manager;
@@ -15,20 +14,20 @@ class AltInboundController
     public function blacklist(Request $request)
     {
         $state = (int) $request->get('blacklist');
-        with(new Data('blocker'))->setBlacklist($state);
+        with(new Data('Inbound'))->setBlacklist($state);
         return;
     }
 
     public function customView(Request $request)
     {
         $name = $request->get('custom-view');
-        with(new Data('blocker'))->setCustomView($name);
+        with(new Data('Inbound'))->setCustomView($name);
         return;
     }
 
     public function block(Request $request)
     {
-        return view(Data::customView() ?? 'alt-blocker::block');
+        return view(Data::customView() ?? 'alt-inbound::block');
     }
 
     public function index()
@@ -38,7 +37,7 @@ class AltInboundController
 
         //Publish form
         // Get an array of values
-        $data = new Data('blocker');
+        $data = new Data('Inbound');
         $values = $data->all();
 
         // Get a blueprint.So
@@ -70,7 +69,7 @@ class AltInboundController
         // Grab the old directory just in case
 //        $oldDirectory = Blueprint::directory();
 
-        $data = new Data('blocker');
+        $data = new Data('Inbound');
 
         // Get a blueprint.
         $blueprint = with(new BlueprintRepository)->setDirectory(__DIR__ . '/../../../resources/blueprints')->find('blocker');
@@ -86,7 +85,7 @@ class AltInboundController
 
         $data->setAll($fields->process()->values()->toArray());
 
-        $data = new Data('blocker');
+        $data = new Data('Inbound');
         $values = $data->all();
 
         return [
@@ -97,9 +96,9 @@ class AltInboundController
     public function delete(Request $request)
     {
         $manager = new Manager();
-        $manager->disk()->delete('content/alt-blocker/blocks/' . base64_encode($request->get('ip')) . '.yaml');
+        $manager->disk()->delete('content/alt-inbound/blocks/' . base64_encode($request->get('ip')) . '.yaml');
 
-        $data = new Data('blocker');
+        $data = new Data('Inbound');
         $values = $data->all();
         return [
             'data' => $values
@@ -108,7 +107,7 @@ class AltInboundController
 
     public function export(Request $request)
     {
-        $data = new Data('blocker');
+        $data = new Data('Inbound');
 
         $callback = function() use ($data) {
             $df = fopen("php://output", 'w');
@@ -150,7 +149,7 @@ class AltInboundController
             // Close the file handle
             fclose($handle);
         }
-        $data = new Data('blocker');
+        $data = new Data('Inbound');
         $data->saveAll($currentData);
         return;
     }

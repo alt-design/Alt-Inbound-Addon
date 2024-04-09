@@ -1,33 +1,27 @@
-<?php
+<?php namespace AltDesign\AltInbound;
 
-namespace AltDesign\AltInbound;
-
-// Facades
 use Statamic\Facades\CP\Nav;
-
-// Providers
 use Statamic\Providers\AddonServiceProvider;
 
 class ServiceProvider extends AddonServiceProvider
 {
-
     protected $routes = [
         'cp' => __DIR__.'/../routes/cp.php',
         'web' => __DIR__.'/../routes/web.php',
     ];
 
-    protected $vite = [
-        'input' => [
-            'resources/js/alt-blocker-addon.js',
-            'resources/css/alt-blocker-addon.css'
-        ],
-        'publicDirectory' => 'resources/dist',
+    protected $publishables = [
+        __DIR__.'/../resources/dist' => '',
+    ];
+
+    protected $tags = [
+        \AltDesign\AltInbound\Tags\AltInbound::class,
     ];
 
     protected $middlewareGroups = [
         'web' => [
             \AltDesign\AltInbound\Http\Middleware\CheckForBlocks::class,
-        ]
+        ],
     ];
 
     public function addToNav()
