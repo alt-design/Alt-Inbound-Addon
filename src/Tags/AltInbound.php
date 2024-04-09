@@ -10,7 +10,11 @@ use AltDesign\AltCookiesAddon\Helpers\Data;
 
 class AltInbound extends Tags
 {
+    protected $viteBuild = 'vendor/alt-inbound/build';
+    protected $viteHot = __DIR__ . '/../../resources/dist/hot';
+    protected $assetPathProd = '/vendor/alt-inbound/img/';
     protected static $handle = 'AltInbound';
+
     /**
      * The {{ AltInbound:FrontendAssets }} tag.
      * Puts the Vite assets on the frontend
@@ -18,9 +22,9 @@ class AltInbound extends Tags
      */
     public function FrontendAssets()
     {
-        $vite = (new Vite)->useHotfile( __DIR__ . '/../../resources/dist/hot')->useBuildDirectory('vendor/alt-inbound-addon/build');
+        $vite = (new Vite)->useHotfile( $this->viteHot)->useBuildDirectory($this->viteBuild);
         $assets = sprintf('<script type="module" src="%s"></script>', $vite->asset('resources/js/alt-inbound-frontend.js'));
-        $assets .= sprintf('<script type="module" src="%s"></script>', $vite->asset('resources/css/alt-inbound-frontend.css'));
+        $assets .= sprintf('<link rel="stylesheet" href="%s">', $vite->asset('resources/css/alt-inbound-frontend.css'));
         return $assets;
     }
 
@@ -31,27 +35,24 @@ class AltInbound extends Tags
      */
     public function CPAssets()
     {
-        $vite = (new Vite)->useHotfile( __DIR__ . '/../../resources/dist/hot')->useBuildDirectory('vendor/alt-inbound-addon/build');
+        $vite = (new Vite)->useHotfile( $this->viteHot)->useBuildDirectory($this->viteBuild);
         $assets = sprintf('<script type="module" src="%s"></script>', $vite->asset('resources/js/alt-inbound-addon.js'));
-        $assets .= sprintf('<script type="module" src="%s"></script>', $vite->asset('resources/css/alt-inbound-addon.css'));
+        $assets .= sprintf('<link rel="stylesheet" href="%s">', $vite->asset('resources/css/alt-inbound-addon.css'));
         return $assets;
     }
 
     public function Background()
     {
-        $vite = (new Vite)->useHotfile( __DIR__ . '/../../resources/dist/hot')->useBuildDirectory('vendor/alt-inbound-addon/build');
-        return $vite->asset('resources/img/alt-gradient-full.png');
+        return $this->assetPathProd . 'alt-gradient-full.png';
     }
 
     public function Mobile()
     {
-        $vite = (new Vite)->useHotfile( __DIR__ . '/../../resources/dist/hot')->useBuildDirectory('vendor/alt-inbound-addon/build');
-        return $vite->asset('resources/img/alt-gradient-mobile.png');
+        return $this->assetPathProd . 'alt-gradient-mobile.png';
     }
 
     public function Blocked()
     {
-        $vite = (new Vite)->useHotfile( __DIR__ . '/../../resources/dist/hot')->useBuildDirectory('vendor/alt-inbound-addon/build');
-        return $vite->asset('resources/img/alt-blocked-icon.png');
+        return $this->assetPathProd . 'alt-blocked-icon.png';
     }
 }

@@ -5,29 +5,9 @@
     "src": "resources/css/alt-inbound-addon.css"
   },
   "resources/css/alt-inbound-frontend.css": {
-    "file": "assets/alt-inbound-frontend-bab5982c.css",
+    "file": "assets/alt-inbound-frontend-4b12cf9f.css",
     "isEntry": true,
     "src": "resources/css/alt-inbound-frontend.css"
-  },
-  "resources/img/alt-gradient-full.png": {
-    "file": "assets/alt-gradient-full-4ed993c7.js",
-    "isEntry": true,
-    "src": "resources/img/alt-gradient-full.png"
-  },
-  "resources/img/alt-gradient-mobile.png": {
-    "file": "assets/alt-gradient-mobile-4ed993c7.js",
-    "isEntry": true,
-    "src": "resources/img/alt-gradient-mobile.png"
-  },
-  "resources/img/alt-gradient.png": {
-    "file": "assets/alt-gradient-4ed993c7.js",
-    "isEntry": true,
-    "src": "resources/img/alt-gradient.png"
-  },
-  "resources/img/stop-blocked-large.png": {
-    "file": "assets/stop-blocked-large-4ed993c7.js",
-    "isEntry": true,
-    "src": "resources/img/stop-blocked-large.png"
   },
   "resources/js/alt-inbound-addon.js": {
     "file": "assets/alt-inbound-addon-11b9aeae.js",
