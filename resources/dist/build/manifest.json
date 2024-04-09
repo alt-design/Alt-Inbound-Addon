@@ -1,12 +1,22 @@
 {
-  "resources/css/alt-redirect-addon.css": {
-    "file": "assets/alt-redirect-addon-4ed993c7.js",
+  "resources/css/alt-inbound-addon.css": {
+    "file": "assets/alt-inbound-addon-9b94acf0.css",
     "isEntry": true,
-    "src": "resources/css/alt-redirect-addon.css"
+    "src": "resources/css/alt-inbound-addon.css"
   },
-  "resources/js/alt-redirect-addon.js": {
-    "file": "assets/alt-redirect-addon-9a8a54a7.js",
+  "resources/css/alt-inbound-frontend.css": {
+    "file": "assets/alt-inbound-frontend-4b12cf9f.css",
     "isEntry": true,
-    "src": "resources/js/alt-redirect-addon.js"
+    "src": "resources/css/alt-inbound-frontend.css"
+  },
+  "resources/js/alt-inbound-addon.js": {
+    "file": "assets/alt-inbound-addon-11b9aeae.js",
+    "isEntry": true,
+    "src": "resources/js/alt-inbound-addon.js"
+  },
+  "resources/js/alt-inbound-frontend.js": {
+    "file": "assets/alt-inbound-frontend-4ed993c7.js",
+    "isEntry": true,
+    "src": "resources/js/alt-inbound-frontend.js"
   }
 }

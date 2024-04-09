@@ -1,13 +1,13 @@
-<?php
+<?php namespace AltDesign\AltInbound\Http\Middleware;
 
-namespace AltDesign\AltBlocker\Http\Middleware;
-
-use Closure;
-use Illuminate\Http\Request;
-use Statamic\Facades\Site;
 use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Http\Request;
+use Closure;
+
+use Statamic\Facades\Site;
 use Statamic\Facades\YAML;
-use AltDesign\AltBlocker\Helpers\Data;
+
+use AltDesign\AltInbound\Helpers\Data;
 
 class CheckForBlocks
 {
@@ -21,12 +21,12 @@ class CheckForBlocks
 
         $uri = $request->getRequestUri();
         $b64 = base64_encode($request->ip());
-        $blockOnDisk = (int)\Statamic\Facades\File::exists('content/alt-blocker/blocks/' . $b64 . '.yaml');
+        $blockOnDisk = (int)\Statamic\Facades\File::exists('content/alt-inbound/blocks/' . $b64 . '.yaml');
         $blacklisting = Data::blacklisting();
 
         // Blacklist and present logic table means == works to handle case. don't redirect the blocked page.
-        if ($blockOnDisk == $blacklisting && ($uri != '/alt-design/alt-blocker/blocked')) {
-            return redirect('/alt-design/alt-blocker/blocked', 301);
+        if ($blockOnDisk == $blacklisting && ($uri != '/alt-design/alt-inbound/blocked')) {
+            return redirect('/alt-design/alt-inbound/blocked', 301);
         }
         return $next($request);
     }
