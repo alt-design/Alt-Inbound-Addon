@@ -35,10 +35,11 @@ Example IP :
 Drop us a big shout-out if you have any questions, comments, or concerns. We're always looking to improve our addons, so if you have any feature requests, we'd love to hear them.
 
 Also - check out our other addons!
+- [Alt Cookies Addon](https://github.com/alt-design/Alt-Cookies-Addon)
 - [Alt SEO Addon](https://github.com/alt-design/Alt-SEO-Addon)
-- [Alt Sitemap Addon](https://github.com/alt-design/Alt-Sitemap-Addon)
 - [Alt Akismet Addon](https://github.com/alt-design/Alt-Akismet-Addon)
-- [Alt Redirect Addon](https://github.com/alt-design/Alt-Redirect-Addon)
+- [Alt Inbound Addon](https://github.com/alt-design/Alt-Inbound-Addon)
+- [Alt Sitemap Addon](https://github.com/alt-design/Alt-Sitemap-Addon)
 - [Alt Password Protect Addon](https://github.com/alt-design/Alt-Password-Protect-Addon)
 
 ## Postcardware
@@ -46,8 +47,8 @@ Also - check out our other addons!
 Send us a postcard from your hometown if you like this addon. We love getting mail from other cool peeps!
 
 Alt Design  
-278 Uttoxeter New Rd  
+St Helens House  
 Derby  
-DE22 3LN  
-UK  
+DE1 3EE  
+UK   
 
