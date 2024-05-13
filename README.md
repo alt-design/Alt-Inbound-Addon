@@ -37,8 +37,8 @@ Drop us a big shout-out if you have any questions, comments, or concerns. We're 
 Also - check out our other addons!
 - [Alt Cookies Addon](https://github.com/alt-design/Alt-Cookies-Addon)
 - [Alt SEO Addon](https://github.com/alt-design/Alt-SEO-Addon)
+- [Alt Redirect Addon](https://github.com/alt-design/Alt-Redirect-Addon)
 - [Alt Akismet Addon](https://github.com/alt-design/Alt-Akismet-Addon)
-- [Alt Inbound Addon](https://github.com/alt-design/Alt-Inbound-Addon)
 - [Alt Sitemap Addon](https://github.com/alt-design/Alt-Sitemap-Addon)
 - [Alt Password Protect Addon](https://github.com/alt-design/Alt-Password-Protect-Addon)
 
@@ -50,5 +50,5 @@ Alt Design
 St Helens House  
 Derby  
 DE1 3EE  
-UK   
+UK    
 
