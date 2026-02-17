@@ -1,3 +1,6 @@
-node_modules/
-vendor/
-.idea
+composer.lock
+/node_modules
+package-lock.json
+/vendor
+vite.hot
+.DS_*

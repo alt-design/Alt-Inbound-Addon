@@ -1,22 +1,32 @@
 {
   "resources/css/alt-inbound-addon.css": {
-    "file": "assets/alt-inbound-addon-9b94acf0.css",
+    "file": "assets/alt-inbound-addon-CVzMWlpL.css",
+    "src": "resources/css/alt-inbound-addon.css",
     "isEntry": true,
-    "src": "resources/css/alt-inbound-addon.css"
+    "name": "alt-inbound-addon",
+    "names": [
+      "alt-inbound-addon.css"
+    ]
   },
   "resources/css/alt-inbound-frontend.css": {
-    "file": "assets/alt-inbound-frontend-fd1c4f8a.css",
+    "file": "assets/alt-inbound-frontend-B-NpELeJ.css",
+    "src": "resources/css/alt-inbound-frontend.css",
     "isEntry": true,
-    "src": "resources/css/alt-inbound-frontend.css"
+    "name": "alt-inbound-frontend",
+    "names": [
+      "alt-inbound-frontend.css"
+    ]
   },
   "resources/js/alt-inbound-addon.js": {
-    "file": "assets/alt-inbound-addon-92113b5a.js",
-    "isEntry": true,
-    "src": "resources/js/alt-inbound-addon.js"
+    "file": "assets/alt-inbound-addon-DWWQvv7-.js",
+    "name": "alt-inbound-addon",
+    "src": "resources/js/alt-inbound-addon.js",
+    "isEntry": true
   },
   "resources/js/alt-inbound-frontend.js": {
-    "file": "assets/alt-inbound-frontend-4ed993c7.js",
-    "isEntry": true,
-    "src": "resources/js/alt-inbound-frontend.js"
+    "file": "assets/alt-inbound-frontend-l0sNRNKZ.js",
+    "name": "alt-inbound-frontend",
+    "src": "resources/js/alt-inbound-frontend.js",
+    "isEntry": true
   }
 }

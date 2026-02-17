@@ -1,12 +1,16 @@
 <?php namespace AltDesign\AltInbound\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Statamic\Filesystem\Manager;
-
-use Statamic\Fields\BlueprintRepository;
-use Statamic\Fields\Blueprint;
-
 use AltDesign\AltInbound\Helpers\Data;
+use Facades\Statamic\Version;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+
+use Inertia\Inertia;
+use Statamic\CP\PublishForm;
+use Statamic\Fields\Blueprint;
+use Statamic\Fields\BlueprintRepository;
+use Statamic\Filesystem\Manager;
 
 class AltInboundController
 {
@@ -49,17 +53,18 @@ class AltInboundController
         // Pre-process the values.
         $fields = $fields->preProcess();
 
-        $blacklist = Data::whitelisting() ? 0 : 1;
+        $blacklist = Data::whitelisting() ? false : true;
 
         // Reset the directory to the old one
 //        Blueprint::setDirectory($oldDirectory);
 
-        return view('alt-inbound::index', [
+        return Inertia::render('alt-inbound::Index', [
             'blueprint' => $blueprint->toPublishArray(),
-            'values' => $fields->values(),
-            'meta' => $fields->meta(),
-            'data' => $values,
+            'initialValues' => $fields->values()->all(),
+            'initialMeta' => $fields->meta()->all(),
+            'items' => $values,
             'blacklist' => $blacklist,
+            'customView' => Data::customView(),
         ]);
     }
 
@@ -100,9 +105,10 @@ class AltInboundController
 
         $data = new Data('Inbound');
         $values = $data->all();
-        return [
-            'data' => $values
-        ];
+        
+        return redirect()->back()->with([
+            'items' => $values,
+        ]);
     }
 
     public function export(Request $request)
@@ -128,16 +134,19 @@ class AltInboundController
     }
     public function import(Request $request)
     {
-        $currentData = json_decode($request->get('data'), true);
+        $data = new Data('Inbound');
+        $currentData = $data->all();
+
         $file = $request->file('file');
         $handle = fopen($file->path(), 'r');
         if ($handle !== FALSE) {
             $headers = fgetcsv($handle);
             while (($row = fgetcsv($handle)) !== FALSE) {
                 $temp = [
-                    'id' => $row[0],
+                    'id' => !empty($row[0]) ? $row[0] : uniqid(),
                     'ip' => $row[1],
                 ];
+
                 foreach ($currentData as $rdKey => $block) {
                     if ($block['id'] === $temp['id'] || $block['ip'] === $temp['ip']) {
                         $currentData[$rdKey] = $temp;
@@ -151,6 +160,9 @@ class AltInboundController
         }
         $data = new Data('Inbound');
         $data->saveAll($currentData);
-        return;
+        
+        return redirect()->back()->with([
+            'items' => $data->all(),
+        ]);
     }
 }

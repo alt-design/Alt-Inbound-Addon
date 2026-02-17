@@ -1,5 +1,5 @@
 import AltInbound from './components/AltInbound.vue';
 
 Statamic.booting(() => {
-    Statamic.$components.register('alt-inbound', AltInbound);
+    Statamic.$inertia.register('alt-inbound::Index', AltInbound);
 });

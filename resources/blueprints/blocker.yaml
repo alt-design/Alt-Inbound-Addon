@@ -12,6 +12,7 @@ tabs:
               validate:
                 - required
               display: IP Address
+              instructions: Add a new IP address to the list
               instructions_position: above
               listable: hidden
               visibility: visible

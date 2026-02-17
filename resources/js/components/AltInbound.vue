@@ -1,269 +1,215 @@
-<script>
-export default ({
-    props: {
-        title: String,
-        action: String,
-        blueprint: Array,
-        meta: Array,
-        redirectTo: String,
-        values: Array,
-        data: Array,
-        items: Array,
-        blacklistset: Number,
-    },
-    computed: {
-        lastPage() {
-            return Math.ceil(this.totalItems / this.perPage);
-        }
-    },
-    data() {
-        return {
-            itemsReady: [],
-            itemsSliced: [],
-            perPage: 10,
-            currentPage: 1,
-            totalItems: 0,
-            selectedFile: null,
-            search: '',
-            fileName: 'Choose a file...',
-            selectedPage: '',
-            blacklist: 1,
-            customView: '',
-        }
-    },
-    watch: {
-        search: {
-            immediate: true,
-            handler() {
-                this.sliceItems();
-            }
-        }
-    },
-    mounted() {
-        this.blacklist = this.blacklistset
-        this.itemsReady = this.items
-        this.totalItems = this.items.length
-        this.sliceItems()
-    },
-    methods: {
-        updateItems(res) {
-            this.itemsReady = res.data.data
-            this.totalItems = res.data.data.length
-            this.sliceItems()
-            this.$forceUpdate()
-        },
-        setPage(page) {
-            this.currentPage = page
-            this.sliceItems()
-        },
-        sliceItems() {
-            let temp = this.itemsReady;
+<script setup>
+import { Header, Heading, Subheading, PublishContainer, Button, Switch, Card, Input, Pagination } from '@statamic/cms/ui';
+import { Pipeline, BeforeSaveHooks, Request, AfterSaveHooks } from '@statamic/cms/save-pipeline'; 
+import { router } from '@statamic/cms/inertia'
+import { computed, ref, watch } from 'vue'; 
 
-            if (this.search) {
-                temp = temp.filter(item => {
-                    // Convert all values to string and lower case for case-insensitive comparison
-                    let tempArr = Object.values(item).map(value => value.toString().toLowerCase());
-                    // Check if any value includes the search string
-                    return tempArr.some(value => value.includes(this.search.toLowerCase()));
-                });
-            }
+const props = defineProps({
+    blueprint: Array,
+    initialMeta: Array,
+    initialValues: Array,
+    data: Array,
+    items: Array,
+    blacklist: Boolean,
+    customView: String,
+});
 
-            const start = (this.currentPage - 1) * this.perPage;
-            const end = start + this.perPage;
-            this.totalItems = temp.length;
-            this.itemsSliced = temp.slice(start, end);
-        },
-        deleteRedirect(ip, id) {
-            if (confirm('Are you sure you want to delete this block?')) {
-                Statamic.$axios.post(cp_url('alt-design/alt-inbound/delete'), {
-                    ip: ip,
-                    id: id
-                }).then(res => {
-                    this.updateItems(res)
-                }).catch(err => {
-                    console.log(err)
-                })
-            }
-        },
-        importFromCSV() {
-            if (!this.selectedFile) {
-                alert("You haven't attached a CSV file!");
-                return;
-            }
+const perPage = 10;
+const currentPage = ref(1);
+const selectedFile = ref(null);
+const search = ref('');
+const values = ref({...props.initialValues});
+const meta = ref(props.initialMeta);
+const errors = ref({});
+const saving = ref(false);
+const container = ref('container');
+const blacklistValue = ref(props.blacklist);
+const customViewValue = ref(props.customView);
 
-            var formData = new FormData();
-            formData.append('file', this.selectedFile)
-            formData.append('data', JSON.stringify(this.itemsReady))
-            Statamic.$axios.post(cp_url('alt-design/alt-inbound/import'), formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            }).then(res => {
-                location.reload();
-                return;
-            }).catch(err => {
-                console.log(err)
-            })
-        },
-        handleFileUpload(event) {
-            this.selectedFile = event.target.files[0];
-            this.fileName = this.selectedFile ? this.selectedFile.name : 'Choose a file...';
-        },
-        dropdownPageChange() {
-            this.setPage(this.selectedPage)
-        },
-        blacklistChange() {
-            this.blacklist = Math.abs( this.blacklist - 1);
-            var formData = new FormData();
-            formData.append('blacklist', this.blacklist)
-            Statamic.$axios.post(cp_url('alt-design/alt-inbound/blacklist'), formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            }).then(res => {
-                console.log('Blacklist state ' +  this.blacklist);
-            }).catch(err => {
-                console.log(err)
-            })
-        },
-        viewChanged() {
-            console.log('View name changed');
+const lastPage = computed(() => {
+    return Math.ceil(itemsSliced.value.total / perPage);
+});
 
-            var formData = new FormData();
-            formData.append('custom-view', this.customView)
-            Statamic.$axios.post(cp_url('alt-design/alt-inbound/custom-view'), formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
-            }).then(res => {
-                console.log('custom view ' +  this.customView);
-            }).catch(err => {
-                console.log(err)
-            })
-        }
+const itemsSliced = computed(() => {
+    let temp = props.items;
+
+    if (search.value?.length > 0) {
+        temp = temp.filter(item => {
+            // Convert all values to string and lower case for case-insensitive comparison
+            let tempArr = Object.values(item).map(value => value?.toString().toLowerCase());
+            // Check if any value includes the search string
+            return tempArr.some(value => value?.includes(search.value.toLowerCase()));
+        });
     }
-})
+
+    const start = (currentPage.value - 1) * perPage;
+    const end = start + perPage;
+
+    return {
+        total: temp.length,
+        data: temp.slice(start, end)
+    };
+});
+
+function setPage(page) {
+    // If the page we were looking at has now been removed
+    if(page > lastPage.value) {
+        page = lastPage.value;
+    }
+    currentPage.value = page
+}
+
+function deleteRedirect(ip, id) {
+    if (confirm('Are you sure you want to delete this block?')) {
+        router.post(cp_url('alt-design/alt-inbound/delete'), {ip, id}, {
+            preserveState: "errors",
+            preserveScroll: true, 
+            onSuccess: () => {
+                Statamic.$toast.success("Block deleted successfully!")
+                setPage(currentPage.value);
+            }
+        });
+    }
+}
+
+function importFromCSV() {
+    if (!selectedFile.value) {
+        alert("You haven't attached a CSV file!");
+        return;
+    }
+
+    router.post(cp_url('alt-design/alt-inbound/import'), {file: selectedFile.value}, {
+        preserveState: "errors",
+        preserveScroll: true, 
+        onSuccess: () => {
+            Statamic.$toast.success("CSV imported successfully!")
+            setPage(currentPage.value);
+            selectedFile.value = null;
+        }
+    });
+}
+
+function save() {
+    new Pipeline()
+        .provide({ container, errors, saving })
+        .through([
+            new BeforeSaveHooks('alt-inbound'),
+            new Request(cp_url('/alt-design/alt-inbound'), 'POST'),
+            new AfterSaveHooks('alt-inbound'),
+        ])
+        .then(() => {
+            values.value = {...props.initialValues}
+            Statamic.$toast.success("Block added successfully!")
+            router.reload()
+        });
+}
+
+function blacklistChange() {
+    router.post(cp_url('alt-design/alt-inbound/blacklist'), {blacklist: blacklistValue.value}, {
+        preserveState: "errors",
+        preserveScroll: true, 
+        onSuccess: () => {
+            Statamic.$toast.success("Updated successfully!")
+        }
+    });
+}
+
+function viewChanged() {
+    router.post(cp_url('alt-design/alt-inbound/custom-view'), {'custom-view': customViewValue.value}, {
+        preserveState: "errors",
+        preserveScroll: true, 
+        onSuccess: () => {
+            Statamic.$toast.success("View updated successfully!")
+        }
+    });
+}
+
+watch(search, () => {
+    setPage(1)
+});
 </script>
 
 <template>
-    <div id="alt-redirect">
+    <div id="alt-inbound">
+        <Header :title="title">
+            <template #title>
+                <div>
+                    Alt Inbound
+                    <div class="text-sm">{{ instructions }}</div>
+                </div>
+            </template>
+            <Button text="Save" variant="primary" :disabled="saving" @click="save" /> 
+        </Header>
 
-        <publish-form :title="title" :action="action" :blueprint="blueprint" :meta="meta" :values="values" @saved="updateItems($event)"></publish-form>
+        <PublishContainer ref="container" :blueprint="blueprint" :meta="meta" v-model="values" :errors="errors" />
 
-        <div class="card overflow-hidden p-0">
+        <Card class="overflow-hidden p-0">
             <div class="mt-4 pb-2 px-4 flex items-center">
-                <div class="w-1/3 flex items-center">
-                    <label class="switch">
-                        <input v-model="blacklist" type="checkbox" @click="blacklistChange()">
-                        <span class="slider round"></span>
-                    </label>
+                <div class="w-1/3 flex items-center gap-3">
+                    <Switch size="lg" v-model="blacklistValue" v-on:update:model-value="blacklistChange()" />
                     <div class="ml-4 text-sm">Whitelist / Blacklist</div>
                 </div>
-                <input type="text" class="input-text w-1/3" v-model="search" placeholder="Search">
+                <Input type="text" class="input-text w-1/3" v-model="search" placeholder="Search" />
             </div>
             <div class="px-2">
                 <table data-size="sm" tabindex="0" class="data-table" style="table-layout: fixed">
-                <thead>
-                    <tr>
-                        <th class="group from-column sortable-column" style="width:33%">
-                            <span>IP Address</span>
-                        </th>
-                        <th class="actions-column" style="width:13.4%"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr v-for="item in itemsSliced" :key="item.id" style="width : 100%; overflow: clip">
-                        <td>
-                            {{ item.ip }}
-                        </td>
-                        <td>
-                            <button @click="deleteRedirect(item.ip, item.id)" class="btn"
-                                    style="color: #bc2626;">Remove
-                            </button>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                    <thead>
+                        <tr>
+                            <th class="group from-column sortable-column" style="width:33%">
+                                <span>IP Address</span>
+                            </th>
+                            <th class="actions-column" style="width:13.4%"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="item in itemsSliced.data" :key="item.id" style="width : 100%; overflow: clip">
+                            <td>
+                                {{ item.ip }}
+                            </td>
+                            <td>
+                                <Button icon="trash" size="sm" @click="deleteRedirect(item.ip, item.id)" text="Remove" variant="danger" />
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-            <div class="pagination text-sm py-4 px-4 flex items-center justify-between">
-                <div class="w-1/3 flex items-center">
-                    Page <span class="font-semibold mx-1" v-html="currentPage"></span> of <span class="mx-1" v-html="lastPage"></span>
-                </div>
-                <div class="w-1/3 flex items-center justify-center">
-                    <span style="height: 15px; margin: 0 15px; width: 12px;" class="cursor-pointer" @click="setPage(currentPage - 1 > 0 ? currentPage - 1 : 1)">
-                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="205" height="205" viewBox="0 0 205 205"><defs><clipPath id="clip-LEFT"><rect width="205" height="205"/></clipPath></defs><g id="LEFT" clip-path="url(#clip-LEFT)"><rect width="205" height="205" fill="#fff"/><path stroke="#2e9fff" fill="#2e9fff" id="Icon_awesome-arrow-left" data-name="Icon awesome-arrow-left" d="M114.961,184.524l-9.91,9.91a10.669,10.669,0,0,1-15.132,0L3.143,107.7a10.669,10.669,0,0,1,0-15.132L89.919,5.794a10.669,10.669,0,0,1,15.132,0l9.91,9.91a10.725,10.725,0,0,1-.179,15.311L60.994,82.259H189.283A10.687,10.687,0,0,1,200,92.972v14.284a10.687,10.687,0,0,1-10.713,10.713H60.994l53.789,51.244A10.648,10.648,0,0,1,114.961,184.524Z" transform="translate(2.004 2.353)"/></g></svg>
-                    </span>
-                    <!-- First Page -->
-                    <span v-if="currentPage > 1" class="cursor-pointer py-1 mx-1"
-                          @click="setPage(1)">1</span>
-                    <span v-if="currentPage == 1" class="cursor-pointer py-1 mx-1 font-semibold"
-                          @click="setPage(1)">1</span>
-
-                    <!-- Ellipsis for Previous Pages -->
-                    <span v-if="currentPage > 3">...</span>
-
-                    <!-- Previous Page -->
-                    <span v-if="currentPage > 2" class="cursor-pointer py-1 mx-1"
-                          @click="setPage(currentPage - 1)">{{ currentPage - 1 }}</span>
-
-                    <!-- Current Page (not shown if it's the first or last page) -->
-                    <span v-if="currentPage !== 1 && currentPage !== lastPage"
-                          class="cursor-pointer py-1 mx-1 font-semibold">{{ currentPage }}</span>
-
-                    <!-- Next Page -->
-                    <span v-if="currentPage < lastPage - 1" class="cursor-pointer py-1 mx-1"
-                          @click="setPage(currentPage + 1)">{{ currentPage + 1 }}</span>
-
-                    <!-- Ellipsis for Next Pages -->
-                    <span v-if="currentPage < lastPage - 2">...</span>
-
-                    <!-- Last Page -->
-                    <span v-if="currentPage < lastPage" class="cursor-pointer py-1 mx-1"
-                          @click="setPage(lastPage)">{{ lastPage }}</span>
-                    <span v-if="currentPage == lastPage && lastPage != 1"
-                          class="cursor-pointer py-1 mx-1 font-semibold"
-                          @click="setPage(lastPage)">{{ lastPage }}</span>
-                    <span style="height: 15px; margin: 0 15px; width: 12px;" class="cursor-pointer" @click="setPage(currentPage + 1 < lastPage ? currentPage + 1 : lastPage)">
-                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="205" height="205" viewBox="0 0 205 205"><defs><clipPath id="clip-RIGHT"><rect width="205" height="205"/></clipPath></defs><g id="RIGHT" clip-path="url(#clip-RIGHT)"><rect width="205" height="205" fill="#fff"/><path stroke="#2e9fff" fill="#2e9fff" id="Icon_awesome-arrow-left" data-name="Icon awesome-arrow-left" d="M85.032,184.524l9.91,9.91a10.669,10.669,0,0,0,15.132,0L196.85,107.7a10.669,10.669,0,0,0,0-15.132L110.073,5.794a10.669,10.669,0,0,0-15.132,0l-9.91,9.91a10.725,10.725,0,0,0,.179,15.311L139,82.259H10.71A10.687,10.687,0,0,0,0,92.972v14.284A10.687,10.687,0,0,0,10.71,117.969H139L85.21,169.214A10.648,10.648,0,0,0,85.032,184.524Z" transform="translate(2.004 2.353)"/></g></svg>
-                    </span>
-                </div>
-                <div class="w-1/3 flex justify-end">
-                    <select v-model="selectedPage" @change="dropdownPageChange" class="w-1/2 text-sm">
-                        <option value="" disabled>Select Page</option>
-                        <option v-for="n in lastPage" :key="n" :value="n">{{ n }}</option>
-                    </select>
-                </div>
-            </div>
-        </div>
+            <Pagination :resource-meta="{
+                current_page: currentPage,
+                last_page: lastPage,
+                total: itemsSliced.total
+            }" :show-totals="false" :show-per-page-selector="false" @page-selected="setPage" />
+        </Card>
 
         <div class="flex justify-between flex-wrap">
-            <div class="w-full card overflow-hidden p-0 mb-4 mt-4 px-4 py-4">
-                <span class="font-semibold mb-2">Custom Blocked View</span><br>
-                <p class="text-sm mb-4">Pop your template path here to use a custom view. For example: <code>templates.blocked</code> or <code>templates/blocked</code></p>
+            <Card class="w-full xl:w-1/3 card overflow-hidden p-0 mb-4 mt-4 mr-4 px-4 py-4">
+                <header>
+                    <Heading>Custom Blocked View</Heading>
+                    <Subheading>Pop your template path here to use a custom view. For example: <code>templates.blocked</code> or <code>templates/blocked</code></Subheading>
+                </header>
+                <Input type="text" class="input-text w-1/3" @change="viewChanged()" v-model="customViewValue" placeholder="Custom View Template" />
+            </Card>
 
-                <input type="text" class="input-text w-1/3" @change="viewChanged()" v-model="customView" placeholder="Custom View Template">
-            </div>
+            <Card class="w-full xl:w-1/3 card overflow-hidden p-0 mb-4 mt-4 mr-4 px-4 py-4">
+                <header>
+                    <Heading>CSV Export</Heading>
+                    <Subheading>Exports CSV of all blocks, use this format on import.</Subheading>
+                </header>
+                <a class="btn-primary" :href="cp_url('/alt-design/alt-inbound/export')" download>
+                    <Button text="Export CSV"/>
+                </a>
+            </Card>
 
-            <div class="w-full card overflow-hidden p-0 mb-4 mt-4 px-4 py-4">
-                <span class="font-semibold mb-2">CSV Export</span><br>
-                <p class="text-sm mb-4">Exports CSV of all blocks, use this format on import.</p>
-
-                <a class="btn-primary" :href="cp_url('/alt-design/alt-inbound/export')" download>Export List</a>
-            </div>
-
-            <div class="w-full card overflow-hidden p-0 mb-4 mt-4 px-4 py-4">
-                <span class="font-semibold mb-2">CSV Import</span><br>
-                <p class="text-sm mb-4">Import CSV for Blocks, use the export format on import.</p>
+            <Card class="w-full xl:w-1/3 card overflow-hidden p-0 mb-4 mt-4 ml-4 px-4 py-4">
+                <header>
+                    <Heading>CSV Import</Heading>
+                    <Subheading>Import CSV for Blocks, use the export format on import.</Subheading>
+                </header>
 
                 <div class="flex justify-between items-center">
-                    <div>
-                        <input type="file" id='file-upload' @change="handleFileUpload" class="hidden">
-                        <label for="file-upload" class="btn-primary">Upload File</label>
-                        <span class="file-upload-cover px-4">{{ fileName }}</span>
-                    </div>
-                    <button class="btn-primary" @click="importFromCSV()">Import</button>
+                    <Input type="file" @input="selectedFile = $event.target.files[0]" />
+                    <Button @click="importFromCSV()" text="Import" />
                 </div>
-            </div>
+            </Card>
         </div>
     </div>
 </template>
