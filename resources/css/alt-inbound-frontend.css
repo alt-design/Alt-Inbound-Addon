@@ -1,1 +1,21 @@
-@import "tailwindcss";
+@import "@statamic/cms/tailwind.css";
+@source inline('h-screen w-screen');
+
+
+.alt-inbound {
+    * {
+        @apply text-gray-800;
+    }
+
+    .alt-inbound-mobile {
+        @apply flex lg:hidden;
+    }
+
+    .alt-inbound-desktop {
+        @apply hidden lg:flex;
+    }
+    
+    .alt-inbound-text {
+        @apply p-5;
+    }
+}
