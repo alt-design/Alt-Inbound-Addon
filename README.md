@@ -1,4 +1,4 @@
-# Alt Redirect
+# Alt Inbound
 
 > Ez IP blocking, whitelist or blackist IPs to control who can access your creation.
 
@@ -14,12 +14,12 @@
 You can search for this addon in the `Tools > Addons` section of the Statamic control panel and click **install**, or run the following command from your project root:
 
 ``` bash
-composer require alt-design/alt-blocker
+composer require alt-design/alt-inbound
 ```
 
 ## Basic usage
 
-Head into your Statamic control panel and find "Alt Blocker" on the left sidebar to bring up the controls for the addon.
+Head into your Statamic control panel and find "Alt Inbound" under Tools on the left sidebar to bring up the controls for the addon.
 
 Just take an IP address and add it at the top, then hit save.
 
@@ -29,6 +29,12 @@ Example IP :
 ```
 192.168.1.1
 ```
+
+## Permissions
+
+Alt Inbound registers a **View and manage Alt Inbound IP blocks** permission (`view alt-inbound`). Super users always have it. Any other user needs a role that grants it, under `Users > Roles`, before the tool appears in their navigation or its pages and actions will load.
+
+If you are upgrading from a version without this permission, non-super users who used Alt Inbound lose access until their role is given it.
 
 ## Questions etc
 
