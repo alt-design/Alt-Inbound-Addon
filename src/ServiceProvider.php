@@ -3,6 +3,7 @@
 use Facades\Statamic\Version;
 use Illuminate\Support\Str;
 use Statamic\Facades\CP\Nav;
+use Statamic\Facades\Permission;
 use Statamic\Providers\AddonServiceProvider;
 
 class ServiceProvider extends AddonServiceProvider
@@ -43,13 +44,26 @@ class ServiceProvider extends AddonServiceProvider
             $nav->content('Alt Inbound')
                 ->section('Tools')
                 ->route('alt-inbound.index')
+                ->can('view alt-inbound')
                 ->icon(config('alt-inbound.alt_inbound_icon'));
         });
+    }
+
+    /**
+     * Register the permission that controls who can see and manage the IP blocks.
+     *
+     * @return void
+     */
+    public function registerPermissions()
+    {
+        Permission::register('view alt-inbound')
+            ->label('View and manage Alt Inbound IP blocks');
     }
 
     public function bootAddon()
     {
         $this->addToNav();
+        $this->registerPermissions();
 
         // Statamic >= V6 - unbind the settings blueprint to remove the default settings page and permissions 
         // as we are handling this manually instead
