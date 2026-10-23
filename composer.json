@@ -24,7 +24,18 @@
     },
     "config": {
         "allow-plugins": {
-            "pixelfear/composer-dist-plugin": false
+            "pixelfear/composer-dist-plugin": false,
+            "pestphp/pest-plugin": true
+        }
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.0",
+        "pestphp/pest-plugin-laravel": "^3.0",
+        "orchestra/testbench": "^9.0|^10.0"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "AltDesign\\AltInbound\\Tests\\": "tests"
         }
     }
 }
