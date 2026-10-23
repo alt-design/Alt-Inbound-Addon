@@ -36,6 +36,13 @@ Alt Inbound registers a **View and manage Alt Inbound IP blocks** permission (`v
 
 If you are upgrading from a version without this permission, non-super users who used Alt Inbound lose access until their role is given it.
 
+## Testing
+
+```bash
+composer install
+./vendor/bin/pest
+```
+
 ## Questions etc
 
 Drop us a big shout-out if you have any questions, comments, or concerns. We're always looking to improve our addons, so if you have any feature requests, we'd love to hear them.
