@@ -4,3 +4,4 @@ package-lock.json
 /vendor
 vite.hot
 .DS_*
+/tests/__fixtures__
