@@ -36,7 +36,7 @@ Each entry is a single IPv4 or IPv6 address. Ranges such as `10.0.0.0/8`, wildca
 
 Addresses are saved in a standard form, and visitors are matched in the same form. IPv6 is saved in lower case and compressed, so `2001:DB8:0:0:0:0:0:1` and `2001:db8::1` are the same entry. An IPv4 address written as IPv4-mapped IPv6 (`::ffff:192.168.1.1`) is saved as IPv4.
 
-### Upgrading from 2.0.2 or earlier
+### Upgrading from an earlier version
 
 Entries saved by earlier versions keep matching as they did before. One that was not written in standard form, for example an IPv6 address in capitals or an address with a space after it, never matched a visitor and still does not. To fix those, export the list, delete any ranges or wildcards (they never matched anything, and the import rejects them), import the file again, which adds each address in standard form, and then delete the old entries.
 
