@@ -38,13 +38,13 @@ Addresses are saved in a standard form, and visitors are matched in the same for
 
 ### Upgrading from 2.0.2 or earlier
 
-Entries saved by earlier versions are matched on their exact text. One that was not written in standard form, for example an IPv6 address in capitals or an address with a space after it, still does not match. To re-save them, export the list and import it again. Delete any ranges or wildcards first: they never matched anything, and the import rejects them.
+Entries saved by earlier versions keep matching as they did before. One that was not written in standard form, for example an IPv6 address in capitals or an address with a space after it, never matched a visitor and still does not. To fix those, export the list, delete any ranges or wildcards (they never matched anything, and the import rejects them), import the file again, which adds each address in standard form, and then delete the old entries.
 
 ## CSV import and export
 
 The export has an `id` and an `ip` column. A value starting with `=`, `+`, `-`, `@`, a tab or a line break is prefixed with `'`, so a spreadsheet shows it as text rather than running it as a formula. A valid IP address never starts with one of these, so only entries saved by earlier versions are affected.
 
-The import takes a CSV file of up to 1MB with a header row and an `ip` column. Other columns, including `id`, are ignored, and new entries get new ids. Addresses already on the list are left as they are. Every row must hold a single IP address: if any does not, nothing is imported and the error names the rows to check.
+The import takes a CSV file of up to 1MB and 5,000 rows, with a header row and an `ip` column. Other columns, including `id`, are ignored, and new entries get new ids. Addresses already on the list are left as they are, and empty rows are skipped. Every other row must hold a single IP address: if any does not, nothing is imported and the error names the rows to check.
 
 ## Custom blocked page
 
@@ -73,7 +73,7 @@ If you gitignore the folder, it has to survive deployments. With zero-downtime d
 
 - **Proxies and Cloudflare.** Alt Inbound checks the visitor IP that Laravel reports. Behind Cloudflare or a load balancer, that is the proxy's address unless the site's trusted proxies are set: `trustProxies` in `bootstrap/app.php` on Laravel 11 and later, or the `TrustProxies` middleware on Laravel 10. Trust only the proxies you actually use. If the site trusts every address and can be reached without going through the proxy, a visitor can set their own IP in the `X-Forwarded-For` header and get past the list.
 - **Static caching.** With Statamic's full static caching, the web server serves cached pages without running PHP, so the check does not run for those pages.
-- **What the check covers.** It runs on routes in Laravel's `web` middleware group, which includes the Statamic front end. The control panel and the Statamic REST API (which uses the `api` group by default) are not covered.
+- **What the check covers.** It runs on routes in Laravel's `web` middleware group. That includes the Statamic front end while `statamic.routes.middleware` is left at its default of `web`. The control panel, including its login page, and the Statamic REST and GraphQL APIs are not covered, in allow-list mode as well as block-list mode.
 
 ## Permissions
 

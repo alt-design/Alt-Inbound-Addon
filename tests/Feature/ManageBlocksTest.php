@@ -100,6 +100,18 @@ describe('removing an entry', function () {
         'text whose file name contains a slash' => '???',
     ]);
 
+    it('rejects an id or IP address that is not text', function (array $payload) {
+        $this->signIn();
+        $this->block('203.0.113.7');
+
+        $this->postJson(cp_route('alt-inbound.delete'), $payload)->assertUnprocessable();
+
+        expect($this->listedIps())->toBe(['203.0.113.7']);
+    })->with([
+        'a list as the IP address' => [['id' => 'test', 'ip' => ['203.0.113.7']]],
+        'a list as the id' => [['id' => ['test'], 'ip' => '203.0.113.7']],
+    ]);
+
     it('leaves the list alone when nothing matches', function () {
         $this->signIn();
         $this->block('203.0.113.7');

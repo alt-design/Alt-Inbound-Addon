@@ -14,20 +14,24 @@ class BlockCsv
 
     private const ROWS_NAMED_IN_ERRORS = 20;
 
+    public const MAX_ROWS = 5000;
+
     /**
      * Read the IP addresses from an import file, in standard form and without duplicates.
      *
-     * The file must have an ip column, as the export does. Nothing is returned unless every row holds a single IP address.
+     * The file must have an ip column, as the export does, and no more than MAX_ROWS rows. Nothing is returned unless every
+     * row holds a single IP address. Rows with nothing in them are skipped.
      *
      * @return list<string>
      *
-     * @throws ValidationException When the file has no ip column or any row does not hold a single IP address.
+     * @throws ValidationException When the file has no ip column, has too many rows, or any row does not hold a single IP address.
      */
     public static function read(string $path): array
     {
         $handle = fopen($path, 'r');
 
         try {
+            self::skipByteOrderMark($handle);
             $column = self::ipColumn(fgetcsv($handle, escape: ''));
             [$ips, $badRows] = self::readRows($handle, $column);
         } finally {
@@ -58,10 +62,7 @@ class BlockCsv
      */
     private static function ipColumn(array|false $header): int
     {
-        $names = array_map(
-            fn ($name) => strtolower(trim(self::withoutByteOrderMark((string) $name))),
-            $header ?: [],
-        );
+        $names = array_map(fn ($name) => strtolower(trim((string) $name)), $header ?: []);
 
         $column = array_search('ip', $names, true);
 
@@ -83,12 +84,19 @@ class BlockCsv
         $ips = [];
         $badRows = [];
         $row = 1;
+        $filledRows = 0;
 
         while (($cells = fgetcsv($handle, escape: '')) !== false) {
             $row++;
 
-            if ($cells === [null]) {
+            if (self::isBlank($cells)) {
                 continue;
+            }
+
+            if (++$filledRows > self::MAX_ROWS) {
+                throw ValidationException::withMessages([
+                    'file' => 'The file has more than '.number_format(self::MAX_ROWS).' rows. Split it into smaller files and import each one.',
+                ]);
             }
 
             $ip = Ip::canonical($cells[$column] ?? null);
@@ -120,8 +128,21 @@ class BlockCsv
             : "Nothing was imported. Check rows {$list}: each needs a single IP address.";
     }
 
-    private static function withoutByteOrderMark(string $value): string
+    /**
+     * @param  resource  $handle
+     */
+    private static function skipByteOrderMark($handle): void
     {
-        return str_starts_with($value, self::BYTE_ORDER_MARK) ? substr($value, strlen(self::BYTE_ORDER_MARK)) : $value;
+        if (fread($handle, strlen(self::BYTE_ORDER_MARK)) !== self::BYTE_ORDER_MARK) {
+            rewind($handle);
+        }
+    }
+
+    /**
+     * @param  array<int, string|null>  $cells
+     */
+    private static function isBlank(array $cells): bool
+    {
+        return trim(implode('', array_map(fn ($cell) => (string) $cell, $cells))) === '';
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use AltDesign\AltInbound\Helpers\BlockCsv;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -53,6 +54,8 @@ describe('import', function () {
         'a byte order mark' => "\xEF\xBB\xBFip\n203.0.113.7\n",
         'Windows line endings' => "id,ip\r\n1,203.0.113.7\r\n",
         'blank lines' => "id,ip\n\n1,203.0.113.7\n\n",
+        'empty rows left by a spreadsheet' => "id,ip\n1,203.0.113.7\n,\n\"\",\"\"\n",
+        'a byte order mark before a quoted header' => "\xEF\xBB\xBF\"ip\",\"id\"\n203.0.113.7,1\n",
     ]);
 
     it('accepts a file with a header and no rows', function () {
@@ -77,6 +80,16 @@ describe('import', function () {
         'no header' => ["203.0.113.7\n198.51.100.20\n", 'The file needs a header row with an ip column, as in the export.'],
         'an empty first line' => ["\nip\n203.0.113.7\n", 'The file needs a header row with an ip column, as in the export.'],
     ]);
+
+    it('rejects a file with more rows than it will import at once', function () {
+        $this->signIn();
+
+        importCsv("ip\n".str_repeat("203.0.113.7\n", BlockCsv::MAX_ROWS + 1))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['file' => 'The file has more than 5,000 rows. Split it into smaller files and import each one.']);
+
+        expect($this->entries())->toBeEmpty();
+    });
 
     it('names the first twenty bad rows and counts the rest', function () {
         $this->signIn();
@@ -111,7 +124,7 @@ describe('import', function () {
         Log::shouldHaveReceived('info')->once()->with('Alt Inbound: blocks imported', [
             'user' => auth()->id(),
             'added' => 1,
-            'already listed' => 1,
+            'already_listed' => 1,
         ]);
     });
 });

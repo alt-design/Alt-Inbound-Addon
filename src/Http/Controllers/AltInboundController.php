@@ -122,6 +122,8 @@ class AltInboundController
 
     public function delete(Request $request)
     {
+        $request->validate(['id' => ['nullable', 'string'], 'ip' => ['nullable', 'string']]);
+
         $entry = (new Data('Inbound'))->remove($request->input('id'), $request->input('ip'));
 
         if ($entry !== null) {
@@ -166,7 +168,7 @@ class AltInboundController
         $data = new Data('Inbound');
         $added = count(array_filter($ips, fn ($ip) => $data->add($ip) !== null));
 
-        $this->logChange('blocks imported', ['added' => $added, 'already listed' => count($ips) - $added]);
+        $this->logChange('blocks imported', ['added' => $added, 'already_listed' => count($ips) - $added]);
 
         $data = new Data('Inbound');
 

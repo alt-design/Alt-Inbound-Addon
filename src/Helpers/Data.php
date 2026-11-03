@@ -118,12 +118,21 @@ class Data
 
     /**
      * Whether an IP address is on the list, whichever way it is written.
+     *
+     * The address as given is checked as well as its standard form, so an entry saved by an earlier version in exactly
+     * that form keeps matching.
      */
     public static function isListed(?string $ip): bool
     {
-        $ip = Ip::canonical($ip);
+        $canonical = Ip::canonical($ip);
 
-        return $ip !== null && (new Manager())->disk()->exists(self::blockPath($ip));
+        if ($canonical === null) {
+            return false;
+        }
+
+        $disk = (new Manager())->disk();
+
+        return $disk->exists(self::blockPath($canonical)) || ($ip !== $canonical && $disk->exists(self::blockPath($ip)));
     }
 
     public static function blockPath(string $ip): string

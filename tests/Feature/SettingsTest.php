@@ -1,5 +1,6 @@
 <?php
 
+use AltDesign\AltInbound\Helpers\BlockedView;
 use AltDesign\AltInbound\Helpers\Data;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Log;
@@ -91,6 +92,11 @@ describe('custom blocked page', function () {
         'an absolute path' => '/templates/blocked',
         'a long name' => str_repeat('a', 101),
     ]);
+
+    it('does not accept a view name with a line break after it', function () {
+        expect(BlockedView::isAllowed("templates.blocked\n"))->toBeFalse()
+            ->and(BlockedView::isAllowed('templates.blocked'))->toBeTrue();
+    });
 
     it('logs who changed the view', function () {
         Log::spy();

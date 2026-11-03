@@ -72,6 +72,12 @@ describe('matching', function () {
         $this->visitAs('203.0.113.7', '/about')->assertRedirect(BLOCKED_PAGE);
     });
 
+    it('keeps matching an entry saved by an earlier version in exactly the form the visitor arrives in', function () {
+        $this->block('::ffff:203.0.113.7');
+
+        $this->visitAs('::ffff:203.0.113.7', '/about')->assertRedirect(BLOCKED_PAGE);
+    });
+
     it('matches an IPv6 visitor however the entry was written', function (string $entry) {
         (new Data('Inbound'))->add($entry);
 
