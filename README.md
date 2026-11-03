@@ -30,6 +30,51 @@ Example IP :
 192.168.1.1
 ```
 
+## Entries
+
+Each entry is a single IPv4 or IPv6 address. Ranges such as `10.0.0.0/8`, wildcards such as `192.168.1.*` and hostnames are rejected.
+
+Addresses are saved in a standard form, and visitors are matched in the same form. IPv6 is saved in lower case and compressed, so `2001:DB8:0:0:0:0:0:1` and `2001:db8::1` are the same entry. An IPv4 address written as IPv4-mapped IPv6 (`::ffff:192.168.1.1`) is saved as IPv4.
+
+### Upgrading from an earlier version
+
+Entries saved by earlier versions keep matching as they did before. One that was not written in standard form, for example an IPv6 address in capitals or an address with a space after it, never matched a visitor and still does not. To fix those, export the list, delete any ranges or wildcards (they never matched anything, and the import rejects them), import the file again, which adds each address in standard form, and then delete the old entries.
+
+## CSV import and export
+
+The export has an `id` and an `ip` column. A value starting with `=`, `+`, `-`, `@`, a tab or a line break is prefixed with `'`, so a spreadsheet shows it as text rather than running it as a formula. A valid IP address never starts with one of these, so only entries saved by earlier versions are affected.
+
+The import takes a CSV file of up to 1MB and 5,000 rows, with a header row and an `ip` column. Other columns, including `id`, are ignored, and new entries get new ids. Addresses already on the list are left as they are, and empty rows are skipped. Every other row must hold a single IP address: if any does not, nothing is imported and the error names the rows to check.
+
+## Custom blocked page
+
+The custom view must be one of your site's own views, written like `templates.blocked` or `templates/blocked`, and it must exist when you save it. Namespaced views (`vendor::view`) are not accepted. If the saved view is later removed or fails to render, visitors see the default blocked page and the error is reported to your application log.
+
+## Change log
+
+Adding, removing and importing entries, switching between block-list and allow-list mode, and changing the custom view are written to the application log at `info` level, with the id of the control panel user who made the change. IP addresses are not written to the log.
+
+## Where the list is stored
+
+Entries are YAML files under `content/alt-inbound`: one file per address in `blocks/`, plus `whitelist.yaml` while allow-list mode is on and `custom-view.yaml` for the custom view. The entries are visitors' IP addresses, which are personal data.
+
+Most Statamic sites commit `content/` to git. If yours does, every entry goes into the repository's history and stays there after it is deleted from the list. To keep them out, add the folder to `.gitignore` and stop tracking it:
+
+```bash
+echo "content/alt-inbound" >> .gitignore
+git rm -r --cached content/alt-inbound
+```
+
+Entries that were already committed remain in the history.
+
+If you gitignore the folder, it has to survive deployments. With zero-downtime deployments, such as on Laravel Forge or Envoyer, each release is a fresh checkout, so make `content/alt-inbound` a shared path that is linked into every release. Otherwise each new release starts without the folder: the list is empty, and a site in allow-list mode falls back to block-list mode, which lets every visitor in.
+
+## Deployment notes
+
+- **Proxies and Cloudflare.** Alt Inbound checks the visitor IP that Laravel reports. Behind Cloudflare or a load balancer, that is the proxy's address unless the site's trusted proxies are set: `trustProxies` in `bootstrap/app.php` on Laravel 11 and later, or the `TrustProxies` middleware on Laravel 10. Trust only the proxies you actually use. If the site trusts every address and can be reached without going through the proxy, a visitor can set their own IP in the `X-Forwarded-For` header and get past the list.
+- **Static caching.** With Statamic's full static caching, the web server serves cached pages without running PHP, so the check does not run for those pages.
+- **What the check covers.** It runs on routes in Laravel's `web` middleware group. That includes the Statamic front end while `statamic.routes.middleware` is left at its default of `web`. The control panel, including its login page, and the Statamic REST and GraphQL APIs are not covered, in allow-list mode as well as block-list mode.
+
 ## Permissions
 
 Alt Inbound registers a **View and manage Alt Inbound IP blocks** permission (`view alt-inbound`). Super users always have it. Any other user needs a role that grants it, under `Users > Roles`, before the tool appears in their navigation or its pages and actions will load.

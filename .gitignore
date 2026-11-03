@@ -5,3 +5,4 @@ package-lock.json
 vite.hot
 .DS_*
 /tests/__fixtures__
+.phpunit.result.cache

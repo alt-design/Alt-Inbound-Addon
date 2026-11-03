@@ -11,6 +11,7 @@ tabs:
               type: text
               validate:
                 - required
+                - ip
               display: IP Address
               instructions: Add a new IP address to the list
               instructions_position: above

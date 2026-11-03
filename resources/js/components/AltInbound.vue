@@ -59,6 +59,10 @@ function setPage(page) {
     currentPage.value = page
 }
 
+function showFirstError(errors) {
+    Statamic.$toast.error(Object.values(errors)[0]);
+}
+
 function deleteRedirect(ip, id) {
     if (confirm('Are you sure you want to delete this block?')) {
         router.post(cp_url('alt-design/alt-inbound/delete'), {ip, id}, {
@@ -67,7 +71,8 @@ function deleteRedirect(ip, id) {
             onSuccess: () => {
                 Statamic.$toast.success("Block deleted successfully!")
                 setPage(currentPage.value);
-            }
+            },
+            onError: showFirstError,
         });
     }
 }
@@ -85,7 +90,8 @@ function importFromCSV() {
             Statamic.$toast.success("CSV imported successfully!")
             setPage(currentPage.value);
             selectedFile.value = null;
-        }
+        },
+        onError: showFirstError,
     });
 }
 
@@ -110,7 +116,11 @@ function blacklistChange() {
         preserveScroll: true, 
         onSuccess: () => {
             Statamic.$toast.success("Updated successfully!")
-        }
+        },
+        onError: (errors) => {
+            showFirstError(errors);
+            blacklistValue.value = props.blacklist;
+        },
     });
 }
 
@@ -120,7 +130,11 @@ function viewChanged() {
         preserveScroll: true, 
         onSuccess: () => {
             Statamic.$toast.success("View updated successfully!")
-        }
+        },
+        onError: (errors) => {
+            showFirstError(errors);
+            customViewValue.value = props.customView;
+        },
     });
 }
 

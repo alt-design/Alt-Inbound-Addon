@@ -1,12 +1,7 @@
 <?php namespace AltDesign\AltInbound\Tags;
 
-use Illuminate\Support\Facades\File;
 use Illuminate\Foundation\Vite;
-
 use Statamic\Tags\Tags;
-use Statamic\Filesystem\Manager;
-
-use AltDesign\AltCookiesAddon\Helpers\Data;
 
 class AltInbound extends Tags
 {
