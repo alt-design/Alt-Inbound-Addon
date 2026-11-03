@@ -11,6 +11,7 @@
             :values='@json($values)'
             :items="{{ json_encode($data) }}"
             :blacklistset="{{$blacklist}}"
+            :customviewset='@json($customView)'
         ></alt-inbound>
     </div>
 @endsection

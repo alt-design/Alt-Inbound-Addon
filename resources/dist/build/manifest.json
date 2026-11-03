@@ -1,16 +1,16 @@
 {
   "resources/css/alt-inbound-addon.css": {
-    "file": "assets/alt-inbound-addon-9b94acf0.css",
+    "file": "assets/alt-inbound-addon-1e26b4a9.css",
     "isEntry": true,
     "src": "resources/css/alt-inbound-addon.css"
   },
   "resources/css/alt-inbound-frontend.css": {
-    "file": "assets/alt-inbound-frontend-fd1c4f8a.css",
+    "file": "assets/alt-inbound-frontend-179954eb.css",
     "isEntry": true,
     "src": "resources/css/alt-inbound-frontend.css"
   },
   "resources/js/alt-inbound-addon.js": {
-    "file": "assets/alt-inbound-addon-92113b5a.js",
+    "file": "assets/alt-inbound-addon-2c637815.js",
     "isEntry": true,
     "src": "resources/js/alt-inbound-addon.js"
   },

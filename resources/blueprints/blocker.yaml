@@ -11,6 +11,7 @@ tabs:
               type: text
               validate:
                 - required
+                - ip
               display: IP Address
               instructions_position: above
               listable: hidden
