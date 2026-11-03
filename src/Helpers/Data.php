@@ -1,16 +1,27 @@
 <?php namespace AltDesign\AltInbound\Helpers;
 
-use Illuminate\Support\Facades\File;
-
+use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Statamic\Facades\YAML;
 use Statamic\Filesystem\Manager;
+use Statamic\Yaml\ParseException;
 
 class Data
 {
+    public const BLOCKS_DIRECTORY = 'content/alt-inbound/blocks';
+
     public $type;
     public $manager;
     public $currentFile;
     public $data = [];
+
+    /**
+     * Path of each entry's file, relative to the site, keyed the same as $data.
+     *
+     * @var array<int, string>
+     */
+    private array $files = [];
+
     public function __construct($type)
     {
         $this->type = $type;
@@ -22,17 +33,13 @@ class Data
         if (!$this->manager->disk()->exists('content/alt-inbound')) {
             $this->manager->disk()->makeDirectory('content/alt-inbound');
         }
-        if (!$this->manager->disk()->exists('content/alt-inbound/blocks')) {
-            $this->manager->disk()->makeDirectory('content/alt-inbound/blocks');
+        if (!$this->manager->disk()->exists(self::BLOCKS_DIRECTORY)) {
+            $this->manager->disk()->makeDirectory(self::BLOCKS_DIRECTORY);
         }
-        $allBlocks = File::allFiles(base_path('/content/alt-inbound/blocks'));
-        $allBlocks = collect($allBlocks)->sortByDesc(function ($file) {
-            return $file->getCTime();
-        });
-        foreach ($allBlocks as $block) {
-            $data = Yaml::parse(File::get($block));
-            $this->data[] = $data;
-        }
+
+        $this->manager->disk()->getFilesRecursively(self::BLOCKS_DIRECTORY)
+            ->sortByDesc(fn ($path) => $this->manager->disk()->lastModified($path))
+            ->each(fn ($path) => $this->load($path));
     }
 
     public function get($key)
@@ -55,17 +62,73 @@ class Data
         return $this->data;
     }
 
-    public function setAll($data)
+    /**
+     * Add an IP address to the list in its standard form, leaving it alone if it is already there.
+     *
+     * @return array{ip: string, id: string}|null The new entry, or null when the address was already listed.
+     *
+     * @throws InvalidArgumentException When the value is not a single IP address.
+     */
+    public function add(string $ip): ?array
     {
-        $this->data = $data;
-        $this->manager->disk()->put('content/alt-inbound/blocks/' . base64_encode($data['ip']) . '.yaml', Yaml::dump($this->data));
+        $ip = Ip::canonical($ip) ?? throw new InvalidArgumentException('Not a single IP address.');
+        $path = self::blockPath($ip);
+
+        if ($this->manager->disk()->exists($path)) {
+            return null;
+        }
+
+        $entry = ['ip' => $ip, 'id' => (string) Str::uuid()];
+        $this->manager->disk()->put($path, Yaml::dump($entry));
+
+        $this->files[] = $path;
+        $this->data[] = $entry;
+
+        return $entry;
     }
 
-    public function saveAll($data)
+    /**
+     * Remove the entry with this id and IP text, or failing that the first entry with this IP text.
+     *
+     * Entries are found among the files on disk, so one saved in any form can be removed. The text is compared without
+     * surrounding whitespace, because requests arrive trimmed.
+     *
+     * @return array<string, mixed>|null The removed entry, or null when nothing matched.
+     */
+    public function remove(?string $id, ?string $ip): ?array
     {
-        foreach ($data as $redirect) {
-            $this->setAll($redirect);
+        $ip = trim((string) $ip);
+
+        $index = $this->find(fn ($entry) => $entry['id'] === $id && trim($entry['ip']) === $ip)
+            ?? $this->find(fn ($entry) => trim($entry['ip']) === $ip);
+
+        if ($index === null) {
+            return null;
         }
+
+        $entry = $this->data[$index];
+        $this->manager->disk()->delete($this->files[$index]);
+
+        unset($this->data[$index], $this->files[$index]);
+        $this->data = array_values($this->data);
+        $this->files = array_values($this->files);
+
+        return $entry;
+    }
+
+    /**
+     * Whether an IP address is on the list, whichever way it is written.
+     */
+    public static function isListed(?string $ip): bool
+    {
+        $ip = Ip::canonical($ip);
+
+        return $ip !== null && (new Manager())->disk()->exists(self::blockPath($ip));
+    }
+
+    public static function blockPath(string $ip): string
+    {
+        return self::BLOCKS_DIRECTORY.'/'.base64_encode($ip).'.yaml';
     }
 
     public function setBlacklist($state)
@@ -97,11 +160,7 @@ class Data
 
     static public function customView()
     {
-        $manager = (new Manager());
-        if (!(new Manager())->disk()->exists('content/alt-inbound/custom-view.yaml')) {
-            return null;
-        }
-        if (!($file = File::get(base_path('/content/alt-inbound/custom-view.yaml')))) {
+        if (!($file = (new Manager())->disk()->get('content/alt-inbound/custom-view.yaml'))) {
             return null;
         }
         if (!($yaml = Yaml::parse($file))) {
@@ -110,4 +169,36 @@ class Data
         return $yaml['view'] ?? null;
     }
 
+    /**
+     * Read one entry's file, skipping it if it cannot be parsed or has no IP address.
+     */
+    private function load(string $path): void
+    {
+        try {
+            $entry = Yaml::parse($this->manager->disk()->get($path));
+        } catch (ParseException) {
+            return;
+        }
+
+        if (! is_array($entry) || ! isset($entry['ip'])) {
+            return;
+        }
+
+        $this->files[] = $path;
+        $this->data[] = [...$entry, 'ip' => (string) $entry['ip'], 'id' => isset($entry['id']) ? (string) $entry['id'] : null];
+    }
+
+    /**
+     * @param  callable(array<string, mixed>): bool  $matches
+     */
+    private function find(callable $matches): ?int
+    {
+        foreach ($this->data as $index => $entry) {
+            if ($matches($entry)) {
+                return $index;
+            }
+        }
+
+        return null;
+    }
 }

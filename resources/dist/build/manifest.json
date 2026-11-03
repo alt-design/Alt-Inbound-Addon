@@ -9,7 +9,7 @@
     ]
   },
   "resources/css/alt-inbound-frontend.css": {
-    "file": "assets/alt-inbound-frontend-BWBUfdtE.css",
+    "file": "assets/alt-inbound-frontend-BjEyjkEx.css",
     "src": "resources/css/alt-inbound-frontend.css",
     "isEntry": true,
     "name": "alt-inbound-frontend",
@@ -18,7 +18,7 @@
     ]
   },
   "resources/js/alt-inbound-addon.js": {
-    "file": "assets/alt-inbound-addon-DWWQvv7-.js",
+    "file": "assets/alt-inbound-addon-Bzxfk4Mp.js",
     "name": "alt-inbound-addon",
     "src": "resources/js/alt-inbound-addon.js",
     "isEntry": true
