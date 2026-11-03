@@ -1,33 +1,57 @@
 <?php namespace AltDesign\AltInbound\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Statamic\Filesystem\Manager;
-
-use Statamic\Fields\BlueprintRepository;
-use Statamic\Fields\Blueprint;
-
+use AltDesign\AltInbound\Helpers\BlockCsv;
+use AltDesign\AltInbound\Helpers\BlockedView;
 use AltDesign\AltInbound\Helpers\Data;
+use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Statamic\Facades\User;
+use Statamic\Fields\BlueprintRepository;
+use Throwable;
 
 class AltInboundController
 {
 
     public function blacklist(Request $request)
     {
-        $state = (int) $request->get('blacklist');
-        with(new Data('Inbound'))->setBlacklist($state);
-        return;
+        $request->validate(['blacklist' => ['required', 'boolean']]);
+
+        $blacklisting = $request->boolean('blacklist');
+        with(new Data('Inbound'))->setBlacklist($blacklisting);
+
+        $this->logChange('mode changed', ['mode' => $blacklisting ? 'block list' : 'allow list']);
     }
 
     public function customView(Request $request)
     {
-        $name = $request->get('custom-view');
+        $request->validate([
+            'custom-view' => ['nullable', 'string', function (string $attribute, mixed $value, Closure $fail) {
+                if (! BlockedView::isAllowed($value)) {
+                    $fail('The view must be one of this site\'s own views and must exist, for example templates.blocked.');
+                }
+            }],
+        ]);
+
+        $name = $request->filled('custom-view') ? $request->input('custom-view') : null;
         with(new Data('Inbound'))->setCustomView($name);
-        return;
+
+        $this->logChange('blocked page view changed', ['view' => $name]);
     }
 
     public function block(Request $request)
     {
-        return view(Data::customView() ?? 'alt-inbound::block');
+        $name = Data::customView();
+
+        if (BlockedView::isAllowed($name)) {
+            try {
+                return response(view($name)->render());
+            } catch (Throwable $e) {
+                report($e);
+            }
+        }
+
+        return view(BlockedView::DEFAULT);
     }
 
     public function index()
@@ -60,6 +84,7 @@ class AltInboundController
             'meta' => $fields->meta(),
             'data' => $values,
             'blacklist' => $blacklist,
+            'customView' => Data::customView(),
         ]);
     }
 
@@ -77,13 +102,14 @@ class AltInboundController
         // Get a Fields object
         $fields = $blueprint->fields();
 
-        // Add the values to the object
-        $arr = $request->all();
-        $arr['id'] = uniqid();
-        $fields = $fields->addValues($arr);
+        $fields = $fields->addValues(['ip' => trim((string) $request->input('ip'))]);
         $fields->validate();
 
-        $data->setAll($fields->process()->values()->toArray());
+        $entry = $data->add($fields->process()->values()->get('ip'));
+
+        if ($entry !== null) {
+            $this->logChange('block added', ['entry' => $entry['id']]);
+        }
 
         $data = new Data('Inbound');
         $values = $data->all();
@@ -95,11 +121,17 @@ class AltInboundController
 
     public function delete(Request $request)
     {
-        $manager = new Manager();
-        $manager->disk()->delete('content/alt-inbound/blocks/' . base64_encode($request->get('ip')) . '.yaml');
+        $request->validate(['id' => ['nullable', 'string'], 'ip' => ['nullable', 'string']]);
+
+        $entry = (new Data('Inbound'))->remove($request->input('id'), $request->input('ip'));
+
+        if ($entry !== null) {
+            $this->logChange('block removed', ['entry' => $entry['id']]);
+        }
 
         $data = new Data('Inbound');
         $values = $data->all();
+
         return [
             'data' => $values
         ];
@@ -112,45 +144,39 @@ class AltInboundController
         $callback = function() use ($data) {
             $df = fopen("php://output", 'w');
 
-            fputcsv($df, ['id', 'ip']);
+            fputcsv($df, BlockCsv::HEADERS, escape: '');
 
-            // Use the data from the request instead of fetching from the database
-            foreach ($data->data as $row) {
-                fputcsv($df, [$row['id'], $row['ip'] ]); // Adjust as per your data structure
+            foreach ($data->all() as $row) {
+                fputcsv($df, [BlockCsv::cell($row['id']), BlockCsv::cell($row['ip'])], escape: '');
             }
             fclose($df);
         };
 
         return response()->stream($callback, 200, [
             'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="blocks-'.date('Y-m-d\_H:i:s').'.csv"',
+            'Content-Disposition' => 'attachment; filename="blocks-'.date('Y-m-d_H-i-s').'.csv"',
         ]);
     }
+
     public function import(Request $request)
     {
-        $currentData = json_decode($request->get('data'), true);
-        $file = $request->file('file');
-        $handle = fopen($file->path(), 'r');
-        if ($handle !== FALSE) {
-            $headers = fgetcsv($handle);
-            while (($row = fgetcsv($handle)) !== FALSE) {
-                $temp = [
-                    'id' => $row[0],
-                    'ip' => $row[1],
-                ];
-                foreach ($currentData as $rdKey => $block) {
-                    if ($block['id'] === $temp['id'] || $block['ip'] === $temp['ip']) {
-                        $currentData[$rdKey] = $temp;
-                        continue 2;
-                    }
-                }
-                $currentData[] = $temp;
-            }
-            // Close the file handle
-            fclose($handle);
-        }
+        $request->validate(['file' => ['required', 'file', 'mimes:csv,txt', 'max:1024']]);
+
+        $ips = BlockCsv::read($request->file('file')->getRealPath());
+
         $data = new Data('Inbound');
-        $data->saveAll($currentData);
-        return;
+        $added = count(array_filter($ips, fn ($ip) => $data->add($ip) !== null));
+
+        $this->logChange('blocks imported', ['added' => $added, 'already_listed' => count($ips) - $added]);
+    }
+
+    /**
+     * Record a change to the list or its settings, with the user who made it. IP addresses are left out, as personal data.
+     *
+     * @param  array<string, mixed>  $context
+     */
+    private function logChange(string $change, array $context = []): void
+    {
+        Log::info("Alt Inbound: {$change}", ['user' => User::current()?->id(), ...$context]);
     }
 }

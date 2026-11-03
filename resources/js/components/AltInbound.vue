@@ -10,6 +10,7 @@ export default ({
         data: Array,
         items: Array,
         blacklistset: Number,
+        customviewset: String,
     },
     computed: {
         lastPage() {
@@ -29,6 +30,7 @@ export default ({
             selectedPage: '',
             blacklist: 1,
             customView: '',
+            savedCustomView: '',
         }
     },
     watch: {
@@ -41,11 +43,17 @@ export default ({
     },
     mounted() {
         this.blacklist = this.blacklistset
+        this.customView = this.customviewset || ''
+        this.savedCustomView = this.customView
         this.itemsReady = this.items
         this.totalItems = this.items.length
         this.sliceItems()
     },
     methods: {
+        showError(err) {
+            const errors = err.response?.data?.errors;
+            Statamic.$toast.error(errors ? Object.values(errors)[0][0] : (err.response?.data?.message || 'Something went wrong. Please try again.'));
+        },
         updateItems(res) {
             this.itemsReady = res.data.data
             this.totalItems = res.data.data.length
@@ -81,7 +89,7 @@ export default ({
                 }).then(res => {
                     this.updateItems(res)
                 }).catch(err => {
-                    console.log(err)
+                    this.showError(err)
                 })
             }
         },
@@ -93,7 +101,6 @@ export default ({
 
             var formData = new FormData();
             formData.append('file', this.selectedFile)
-            formData.append('data', JSON.stringify(this.itemsReady))
             Statamic.$axios.post(cp_url('alt-design/alt-inbound/import'), formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
@@ -102,7 +109,7 @@ export default ({
                 location.reload();
                 return;
             }).catch(err => {
-                console.log(err)
+                this.showError(err)
             })
         },
         handleFileUpload(event) {
@@ -113,6 +120,7 @@ export default ({
             this.setPage(this.selectedPage)
         },
         blacklistChange() {
+            const previous = this.blacklist;
             this.blacklist = Math.abs( this.blacklist - 1);
             var formData = new FormData();
             formData.append('blacklist', this.blacklist)
@@ -120,15 +128,12 @@ export default ({
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
-            }).then(res => {
-                console.log('Blacklist state ' +  this.blacklist);
             }).catch(err => {
-                console.log(err)
+                this.showError(err)
+                this.blacklist = previous
             })
         },
         viewChanged() {
-            console.log('View name changed');
-
             var formData = new FormData();
             formData.append('custom-view', this.customView)
             Statamic.$axios.post(cp_url('alt-design/alt-inbound/custom-view'), formData, {
@@ -136,9 +141,11 @@ export default ({
                     'Content-Type': 'multipart/form-data'
                 }
             }).then(res => {
-                console.log('custom view ' +  this.customView);
+                this.savedCustomView = this.customView
+                Statamic.$toast.success('Custom view saved.')
             }).catch(err => {
-                console.log(err)
+                this.showError(err)
+                this.customView = this.savedCustomView
             })
         }
     }

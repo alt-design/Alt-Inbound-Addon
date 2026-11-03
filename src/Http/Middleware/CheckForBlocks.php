@@ -4,9 +4,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Http\Request;
 use Closure;
 
-use Statamic\Facades\Site;
-use Statamic\Facades\YAML;
-
 use AltDesign\AltInbound\Helpers\Data;
 
 class CheckForBlocks
@@ -20,8 +17,7 @@ class CheckForBlocks
     {
 
         $onBlockedPage = $request->is('alt-design/alt-inbound/blocked');
-        $b64 = base64_encode($request->ip());
-        $blockOnDisk = (int)\Statamic\Facades\File::exists('content/alt-inbound/blocks/' . $b64 . '.yaml');
+        $blockOnDisk = (int) Data::isListed($request->ip());
         $blacklisting = Data::whiteListing();
 
         if ($blockOnDisk == $blacklisting && $onBlockedPage) {
