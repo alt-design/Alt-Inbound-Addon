@@ -42,7 +42,7 @@ class ServiceProvider extends AddonServiceProvider
     {
         Nav::extend(function ($nav) {
             $nav->content('Alt Inbound')
-                ->section('Tools')
+                ->section('Alt Tools')
                 ->route('alt-inbound.index')
                 ->can('view alt-inbound')
                 ->icon(config('alt-inbound.alt_inbound_icon'));
