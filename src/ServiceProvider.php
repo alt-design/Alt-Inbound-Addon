@@ -2,6 +2,7 @@
 
 use Facades\Statamic\Version;
 use Illuminate\Support\Str;
+use AltDesign\AltInbound\Support\AltToolsNav;
 use Statamic\Facades\CP\Nav;
 use Statamic\Facades\Permission;
 use Statamic\Providers\AddonServiceProvider;
@@ -41,11 +42,7 @@ class ServiceProvider extends AddonServiceProvider
     public function addToNav()
     {
         Nav::extend(function ($nav) {
-            $nav->content('Alt Inbound')
-                ->section('Alt Tools')
-                ->route('alt-inbound.index')
-                ->can('view alt-inbound')
-                ->icon(config('alt-inbound.alt_inbound_icon'));
+            AltToolsNav::add($nav, 'privacy', 'Alt Inbound', 'alt-inbound.index', 'view alt-inbound', ['construction-barrier', 'shield-key']);
         });
     }
 
