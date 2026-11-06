@@ -19,7 +19,7 @@ composer require alt-design/alt-inbound
 
 ## Basic usage
 
-Head into your Statamic control panel and find "Alt Inbound" under Alt Tools on the left sidebar to bring up the controls for the addon.
+Head into your Statamic control panel and find "Alt Inbound" under Alt Tools → Privacy & security on the left sidebar to bring up the controls for the addon.
 
 Just take an IP address and add it at the top, then hit save.
 
