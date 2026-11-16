@@ -112,6 +112,24 @@ abstract class TestCase extends AddonTestCase
     }
 
     /**
+     * The values the control panel page is given, under the names the 2.x page uses.
+     *
+     * @return array<string, mixed>
+     */
+    protected function indexProps(): array
+    {
+        return $this->get(cp_route('alt-inbound.index'))->assertOk()->viewData('page')['props'];
+    }
+
+    /**
+     * Save an entry the way an earlier version did, with the file named after the text exactly as it was entered.
+     */
+    protected function blockAsEarlierVersion(string $ip, ?string $id = 'test'): void
+    {
+        $this->writeContent('blocks/'.base64_encode($ip).'.yaml', $id === null ? ['ip' => $ip] : ['ip' => $ip, 'id' => $id]);
+    }
+
+    /**
      * @return list<array<string, mixed>>
      */
     protected function entries(): array
