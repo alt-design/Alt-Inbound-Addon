@@ -70,9 +70,12 @@ abstract class TestCase extends AddonTestCase
         return __DIR__.'/__fixtures__/site';
     }
 
-    protected function block(string $ip, string $id = 'test'): void
+    /**
+     * Save an entry the way every version names its file: after the text exactly as it was entered.
+     */
+    protected function block(string $ip, ?string $id = 'test'): void
     {
-        $this->writeContent('blocks/'.base64_encode($ip).'.yaml', ['ip' => $ip, 'id' => $id]);
+        $this->writeContent('blocks/'.base64_encode($ip).'.yaml', $id === null ? ['ip' => $ip] : ['ip' => $ip, 'id' => $id]);
     }
 
     protected function useAllowList(): void
@@ -119,14 +122,6 @@ abstract class TestCase extends AddonTestCase
     protected function indexProps(): array
     {
         return $this->get(cp_route('alt-inbound.index'))->assertOk()->viewData('page')['props'];
-    }
-
-    /**
-     * Save an entry the way an earlier version did, with the file named after the text exactly as it was entered.
-     */
-    protected function blockAsEarlierVersion(string $ip, ?string $id = 'test'): void
-    {
-        $this->writeContent('blocks/'.base64_encode($ip).'.yaml', $id === null ? ['ip' => $ip] : ['ip' => $ip, 'id' => $id]);
     }
 
     /**

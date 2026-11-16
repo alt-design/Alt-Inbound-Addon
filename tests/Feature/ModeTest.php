@@ -84,30 +84,30 @@ describe('ALT_INBOUND_MODE', function () {
 });
 
 describe('switching mode while ALT_INBOUND_MODE is set', function () {
-    it('refuses the change and leaves the content file alone', function (string $mode, bool $blacklist, bool $request) {
+    it('refuses a switch to allow-list mode', function (string $mode) {
         config(['alt-inbound.mode' => $mode]);
-        $blacklist && $this->useAllowList();
         $this->signIn();
 
-        $response = $request
-            ? $this->postJson(cp_route('alt-inbound.blacklist'), ['blacklist' => $blacklist])
-            : $this->post(cp_route('alt-inbound.blacklist'), ['blacklist' => $blacklist ? '1' : '0']);
+        $this->postJson(cp_route('alt-inbound.blacklist'), ['blacklist' => false])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('blacklist');
+        $this->post(cp_route('alt-inbound.blacklist'), ['blacklist' => '0'])->assertSessionHasErrors('blacklist');
 
-        $request
-            ? $response->assertUnprocessable()->assertJsonValidationErrors('blacklist')
-            : $response->assertSessionHasErrors('blacklist');
+        expect(File::exists($this->sitePath().'/content/alt-inbound/whitelist.yaml'))->toBeFalse();
+    })->with(['allow', 'block']);
 
-        expect(File::exists($this->sitePath().'/content/alt-inbound/whitelist.yaml'))->toBe($blacklist);
-    })->with([
-        'allow' => 'allow',
-        'block' => 'block',
-    ])->with([
-        'to block list' => true,
-        'to allow list' => false,
-    ])->with([
-        'as JSON' => true,
-        'as a form' => false,
-    ]);
+    it('refuses a switch to block-list mode', function (string $mode) {
+        config(['alt-inbound.mode' => $mode]);
+        $this->useAllowList();
+        $this->signIn();
+
+        $this->postJson(cp_route('alt-inbound.blacklist'), ['blacklist' => true])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('blacklist');
+        $this->post(cp_route('alt-inbound.blacklist'), ['blacklist' => '1'])->assertSessionHasErrors('blacklist');
+
+        expect(File::exists($this->sitePath().'/content/alt-inbound/whitelist.yaml'))->toBeTrue();
+    })->with(['allow', 'block']);
 });
 
 describe('control panel', function () {
@@ -138,8 +138,10 @@ describe('control panel', function () {
         $this->block('203.0.113.7');
         $this->signIn();
 
-        expect($this->indexProps()['warnings'])->toHaveCount(1)
-            ->and($this->indexProps()['warnings'][0])->toContain('Set ALT_INBOUND_MODE=allow');
+        $warnings = $this->indexProps()['warnings'];
+
+        expect($warnings)->toHaveCount(1)
+            ->and($warnings[0])->toContain('Set ALT_INBOUND_MODE=allow');
     });
 
     it('names a value it does not recognise', function () {

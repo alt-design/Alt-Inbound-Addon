@@ -9,7 +9,7 @@ function problems(): array
 }
 
 it('flags an entry saved by an earlier version that is not a single IP address', function (string $ip) {
-    $this->blockAsEarlierVersion($ip);
+    $this->block($ip);
 
     expect(problems())->toBe([$ip => 'invalid']);
 })->with([
@@ -20,7 +20,7 @@ it('flags an entry saved by an earlier version that is not a single IP address',
 ]);
 
 it('flags an address an earlier version saved in a form other than the standard one', function (string $ip) {
-    $this->blockAsEarlierVersion($ip);
+    $this->block($ip);
 
     expect(problems())->toBe([$ip => 'non-standard']);
 })->with([
@@ -30,7 +30,7 @@ it('flags an address an earlier version saved in a form other than the standard 
 ]);
 
 it('does not flag an address in standard form', function (string $ip) {
-    $this->blockAsEarlierVersion($ip);
+    $this->block($ip);
     (new Data('Inbound'))->add('198.51.100.20');
 
     expect(problems())->toEqual([$ip => null, '198.51.100.20' => null]);
@@ -40,15 +40,15 @@ it('does not flag an address in standard form', function (string $ip) {
 ]);
 
 it('flags an entry with no id', function () {
-    $this->blockAsEarlierVersion('10.0.0.*', id: null);
+    $this->block('10.0.0.*', id: null);
 
     expect((new Data('Inbound'))->allWithProblems())->toBe([['ip' => '10.0.0.*', 'id' => null, 'problem' => 'invalid']]);
 });
 
 it('matches visitors the way the flags say', function () {
-    $this->blockAsEarlierVersion('10.0.0.*');
-    $this->blockAsEarlierVersion(' 203.0.113.7');
-    $this->blockAsEarlierVersion('::ffff:198.51.100.20');
+    $this->block('10.0.0.*');
+    $this->block(' 203.0.113.7');
+    $this->block('::ffff:198.51.100.20');
 
     $this->visitAs('10.0.0.1', '/about')->assertOk();
     $this->visitAs('203.0.113.7', '/about')->assertOk();
@@ -63,7 +63,7 @@ it('lists flagged entries first in the control panel', function () {
         (new Data('Inbound'))->add("203.0.113.{$i}");
     }
 
-    $this->blockAsEarlierVersion('10.0.0.*', 'old');
+    $this->block('10.0.0.*', 'old');
     touch($this->sitePath().'/'.Data::blockPath('10.0.0.*'), now()->subYear()->timestamp);
 
     $items = $this->indexProps()['items'];
@@ -75,7 +75,7 @@ it('lists flagged entries first in the control panel', function () {
 
 it('removes a flagged entry, and adding the address again saves it unflagged', function () {
     $this->signIn();
-    $this->blockAsEarlierVersion(' 203.0.113.7', 'old');
+    $this->block(' 203.0.113.7', 'old');
 
     $this->post(cp_route('alt-inbound.delete'), ['id' => 'old', 'ip' => '203.0.113.7']);
     $this->postJson(cp_route('alt-inbound.create'), ['ip' => '203.0.113.7'])
@@ -89,7 +89,7 @@ it('removes a flagged entry, and adding the address again saves it unflagged', f
 
 it('keeps the flag out of the saved entry and the export', function () {
     $this->signIn();
-    $this->blockAsEarlierVersion('10.0.0.*', 'old');
+    $this->block('10.0.0.*', 'old');
 
     $this->indexProps();
     $export = $this->get(cp_route('alt-inbound.export'))->streamedContent();

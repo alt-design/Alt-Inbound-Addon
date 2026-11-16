@@ -18,13 +18,11 @@ class Mode
      */
     public static function configured(): ?string
     {
-        $value = self::configuredText();
-
-        if ($value === '') {
-            return null;
-        }
-
-        return $value === self::BLOCK ? self::BLOCK : self::ALLOW;
+        return match (self::configuredText()) {
+            '' => null,
+            self::BLOCK => self::BLOCK,
+            default => self::ALLOW,
+        };
     }
 
     /**
@@ -63,12 +61,6 @@ class Mode
 
     private static function configuredText(): string
     {
-        $value = config('alt-inbound.mode');
-
-        if (! is_scalar($value) || $value === false) {
-            return '';
-        }
-
-        return strtolower(trim((string) $value));
+        return strtolower(trim((string) config('alt-inbound.mode')));
     }
 }

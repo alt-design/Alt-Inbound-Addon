@@ -180,7 +180,7 @@ watch(search, () => {
                 <Input type="text" class="input-text w-1/3" v-model="search" placeholder="Search" />
             </div>
             <p v-if="problemCount" class="px-4 pb-2 text-sm">
-                {{ problemCount }} {{ problemCount === 1 ? 'entry was' : 'entries were' }} saved by an earlier version and may not match visitors. {{ problemCount === 1 ? 'It is' : 'They are' }} listed first.
+                Entries saved by an earlier version that may not match visitors: {{ problemCount }}. These are listed first.
             </p>
             <div class="px-2">
                 <table data-size="sm" tabindex="0" class="data-table" style="table-layout: fixed">

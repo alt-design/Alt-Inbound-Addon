@@ -2,6 +2,7 @@
 
 use AltDesign\AltInbound\Helpers\Data;
 use Illuminate\Http\UploadedFile;
+use Statamic\Facades\Permission;
 
 it('turns away a control panel user without the Alt Inbound permission', function (string $method, string $route, array $payload) {
     $this->signIn(permissions: []);
@@ -31,7 +32,7 @@ it('lets a control panel user with the Alt Inbound permission make changes', fun
 });
 
 it('registers the settings permission under the Alt Inbound permission', function () {
-    $parent = \Statamic\Facades\Permission::get('view alt-inbound');
+    $parent = Permission::get('view alt-inbound');
 
     expect($parent->children()->map->value()->all())->toBe(['manage alt-inbound settings']);
 });
