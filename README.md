@@ -23,7 +23,7 @@ Head into your Statamic control panel and find "Alt Inbound" under Alt Tools →
 
 Just take an IP address and add it at the top, then hit save.
 
-There is a toggle to toggle between whitelist and blacklist, then you're gravy
+There is a switch between block-list and allow-list mode (see [Mode](#mode)), then you're gravy.
 
 Example IP : 
 ```
@@ -39,6 +39,26 @@ Addresses are saved in a standard form, and visitors are matched in the same for
 ### Upgrading from an earlier version
 
 Entries saved by earlier versions keep matching as they did before. One that was not written in standard form, for example an IPv6 address in capitals or an address with a space after it, never matched a visitor and still does not. To fix those, export the list, delete any ranges or wildcards (they never matched anything, and the import rejects them), import the file again, which adds each address in standard form, and then delete the old entries.
+
+The control panel lists these entries first and labels them: **Not a single IP address** for ranges, wildcards and other text, which match no visitor, and **Not saved in standard form** for addresses that may not match. Remove them, and add the addresses again where you still need them.
+
+## Mode
+
+In block-list mode, visitors on the list are sent to the blocked page and everyone else gets through. In allow-list mode, only visitors on the list get through.
+
+The mode can be switched in the control panel, which saves it in `content/alt-inbound`. To fix it in the site's environment instead, set `ALT_INBOUND_MODE` in `.env`:
+
+```env
+ALT_INBOUND_MODE=allow
+```
+
+- `allow` or `block` sets the mode, and the control panel switch is locked while it is set. Case and surrounding spaces are ignored.
+- Left out or empty, the control panel setting is used.
+- Any other value counts as `allow`, so a mistyped value sends visitors to the blocked page rather than letting them all in. The control panel shows a warning naming the value.
+
+Use `ALT_INBOUND_MODE=allow` on any site that relies on allow-list mode. A mode saved from the control panel is lost along with `content/alt-inbound` if that folder is not kept between deployments, and the site then lets every visitor in. With the environment variable set, a missing list sends every visitor to the blocked page instead, and the control panel warns that the list is empty. The control panel itself is not covered by the check, so you can still sign in and fix the list.
+
+If the site caches its config (`php artisan config:cache`), run that again after changing the value.
 
 ## CSV import and export
 
@@ -67,7 +87,7 @@ git rm -r --cached content/alt-inbound
 
 Entries that were already committed remain in the history.
 
-If you gitignore the folder, it has to survive deployments. With zero-downtime deployments, such as on Laravel Forge or Envoyer, each release is a fresh checkout, so make `content/alt-inbound` a shared path that is linked into every release. Otherwise each new release starts without the folder: the list is empty, and a site in allow-list mode falls back to block-list mode, which lets every visitor in.
+If you gitignore the folder, it has to survive deployments. With zero-downtime deployments, such as on Laravel Forge or Envoyer, each release is a fresh checkout, so make `content/alt-inbound` a shared path that is linked into every release. Otherwise each new release starts without the folder: the list is empty, and a site in allow-list mode falls back to block-list mode, which lets every visitor in, unless `ALT_INBOUND_MODE=allow` is set (see [Mode](#mode)).
 
 ## Deployment notes
 
@@ -79,7 +99,11 @@ If you gitignore the folder, it has to survive deployments. With zero-downtime d
 
 Alt Inbound registers a **View and manage Alt Inbound IP blocks** permission (`view alt-inbound`). Super users always have it. Any other user needs a role that grants it, under `Users > Roles`, before the tool appears in their navigation or its pages and actions will load.
 
-If you are upgrading from a version without this permission, non-super users who used Alt Inbound lose access until their role is given it.
+Under it sits **Change the Alt Inbound mode and blocked page** (`manage alt-inbound settings`), for the two settings that affect every visitor: the block-list or allow-list mode, and the custom blocked page. A user without it can still view, add, remove, import and export entries, and sees which mode the site is in, but not the switch or the custom view field.
+
+If you are upgrading from a version without these permissions, non-super users who used Alt Inbound lose access until their role is given `view alt-inbound`.
+
+**Upgrading to 1.3.0:** non-super users who switched the mode or set the custom blocked page lose those two controls until their role is also given `manage alt-inbound settings`. Their access to the list is unchanged.
 
 ## Testing
 

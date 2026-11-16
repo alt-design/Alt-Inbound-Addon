@@ -10,7 +10,7 @@
     "src": "resources/css/alt-inbound-frontend.css"
   },
   "resources/js/alt-inbound-addon.js": {
-    "file": "assets/alt-inbound-addon-2c637815.js",
+    "file": "assets/alt-inbound-addon-8670c61d.js",
     "isEntry": true,
     "src": "resources/js/alt-inbound-addon.js"
   },

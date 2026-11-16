@@ -3,9 +3,11 @@
 use AltDesign\AltInbound\Helpers\BlockCsv;
 use AltDesign\AltInbound\Helpers\BlockedView;
 use AltDesign\AltInbound\Helpers\Data;
+use AltDesign\AltInbound\Helpers\Mode;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Statamic\Facades\User;
 use Statamic\Fields\BlueprintRepository;
 use Throwable;
@@ -15,12 +17,20 @@ class AltInboundController
 
     public function blacklist(Request $request)
     {
+        if (Mode::configured() !== null) {
+            throw ValidationException::withMessages([
+                'blacklist' => 'The mode is set by ALT_INBOUND_MODE in the site\'s environment, so it cannot be changed here.',
+            ]);
+        }
+
         $request->validate(['blacklist' => ['required', 'boolean']]);
 
         $blacklisting = $request->boolean('blacklist');
         with(new Data('Inbound'))->setBlacklist($blacklisting);
 
         $this->logChange('mode changed', ['mode' => $blacklisting ? 'block list' : 'allow list']);
+
+        return $this->listResponse();
     }
 
     public function customView(Request $request)
@@ -73,7 +83,7 @@ class AltInboundController
         // Pre-process the values.
         $fields = $fields->preProcess();
 
-        $blacklist = Data::whitelisting() ? 0 : 1;
+        $allowListing = (bool) Data::whiteListing();
 
         // Reset the directory to the old one
 //        Blueprint::setDirectory($oldDirectory);
@@ -82,9 +92,12 @@ class AltInboundController
             'blueprint' => $blueprint->toPublishArray(),
             'values' => $fields->values(),
             'meta' => $fields->meta(),
-            'data' => $values,
-            'blacklist' => $blacklist,
+            'data' => $data->allWithProblems(),
+            'blacklist' => $allowListing ? 0 : 1,
             'customView' => Data::customView(),
+            'canManageSettings' => (bool) User::current()?->can('manage alt-inbound settings'),
+            'modeSetByEnvironment' => Mode::configured() !== null,
+            'warnings' => Mode::warnings($allowListing, count($values)),
         ]);
     }
 
@@ -111,12 +124,7 @@ class AltInboundController
             $this->logChange('block added', ['entry' => $entry['id']]);
         }
 
-        $data = new Data('Inbound');
-        $values = $data->all();
-
-        return [
-            'data' => $values
-        ];
+        return $this->listResponse();
     }
 
     public function delete(Request $request)
@@ -129,12 +137,7 @@ class AltInboundController
             $this->logChange('block removed', ['entry' => $entry['id']]);
         }
 
-        $data = new Data('Inbound');
-        $values = $data->all();
-
-        return [
-            'data' => $values
-        ];
+        return $this->listResponse();
     }
 
     public function export(Request $request)
@@ -168,6 +171,21 @@ class AltInboundController
         $added = count(array_filter($ips, fn ($ip) => $data->add($ip) !== null));
 
         $this->logChange('blocks imported', ['added' => $added, 'already_listed' => count($ips) - $added]);
+    }
+
+    /**
+     * The list as the control panel shows it, with the warnings that depend on it.
+     *
+     * @return array{data: list<array<string, mixed>>, warnings: list<string>}
+     */
+    private function listResponse(): array
+    {
+        $entries = (new Data('Inbound'))->allWithProblems();
+
+        return [
+            'data' => $entries,
+            'warnings' => Mode::warnings((bool) Data::whiteListing(), count($entries)),
+        ];
     }
 
     /**

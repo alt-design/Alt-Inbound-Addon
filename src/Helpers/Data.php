@@ -10,6 +10,10 @@ class Data
 {
     public const BLOCKS_DIRECTORY = 'content/alt-inbound/blocks';
 
+    public const PROBLEM_INVALID = 'invalid';
+
+    public const PROBLEM_NON_STANDARD = 'non-standard';
+
     public $type;
     public $manager;
     public $currentFile;
@@ -60,6 +64,29 @@ class Data
     public function all()
     {
         return $this->data;
+    }
+
+    /**
+     * Every entry with a `problem` key saying why it may not match a visitor, or null when it is in standard form.
+     *
+     * Only entries saved before addresses were validated can have one: `invalid` for text that is not a single IP
+     * address, which matches no visitor, and `non-standard` for an address not saved in its standard form, which
+     * matches only a visitor whose address arrives written exactly that way. Entries with a problem come first, so they
+     * can be found on a long list.
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function allWithProblems(): array
+    {
+        $entries = array_map(
+            fn (array $entry, string $path) => [...$entry, 'problem' => self::problem($entry['ip'], $path)],
+            $this->data,
+            $this->files,
+        );
+
+        usort($entries, fn (array $a, array $b) => ($b['problem'] !== null) <=> ($a['problem'] !== null));
+
+        return $entries;
     }
 
     /**
@@ -152,8 +179,18 @@ class Data
         return;
     }
 
+    /**
+     * Whether the site is in allow-list mode, from ALT_INBOUND_MODE when it is set and the control panel setting
+     * otherwise.
+     *
+     * @return int 1 in allow-list mode, 0 in block-list mode.
+     */
     static public function whiteListing()
     {
+        if (($mode = Mode::configured()) !== null) {
+            return (int) ($mode === Mode::ALLOW);
+        }
+
         return (int)((new Manager())->disk()->exists('content/alt-inbound/whitelist.yaml'));
     }
 
@@ -195,6 +232,20 @@ class Data
 
         $this->files[] = $path;
         $this->data[] = [...$entry, 'ip' => (string) $entry['ip'], 'id' => isset($entry['id']) ? (string) $entry['id'] : null];
+    }
+
+    /**
+     * @return 'invalid'|'non-standard'|null
+     */
+    private static function problem(string $ip, string $path): ?string
+    {
+        $canonical = Ip::canonical($ip);
+
+        if ($canonical === null) {
+            return self::PROBLEM_INVALID;
+        }
+
+        return $path === self::blockPath($canonical) ? null : self::PROBLEM_NON_STANDARD;
     }
 
     /**
