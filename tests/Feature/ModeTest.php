@@ -5,6 +5,11 @@ use AltDesign\AltInbound\Helpers\Mode;
 use Illuminate\Support\Facades\File;
 
 describe('ALT_INBOUND_MODE', function () {
+    it('is read through the addon\'s config', function () {
+        expect(config()->has('alt-inbound.mode'))->toBeTrue()
+            ->and(config('alt-inbound.mode'))->toBeNull();
+    });
+
     it('sends every visitor to the blocked page in allow-list mode when the content folder is missing', function () {
         config(['alt-inbound.mode' => 'allow']);
 

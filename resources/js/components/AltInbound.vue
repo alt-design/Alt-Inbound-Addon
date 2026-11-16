@@ -124,7 +124,7 @@ function blacklistChange() {
         preserveScroll: true, 
         onSuccess: () => {
             Statamic.$toast.success("Updated successfully!")
-            router.reload({ only: ['warnings'] })
+            router.reload({ only: ['warnings', 'blacklist'] })
         },
         onError: (errors) => {
             showFirstError(errors);
