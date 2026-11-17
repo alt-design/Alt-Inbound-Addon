@@ -1,5 +1,5 @@
 <script setup>
-import { Header, Heading, Subheading, PublishContainer, Button, Switch, Card, Input, Pagination } from '@statamic/cms/ui';
+import { Alert, Badge, Header, Heading, Subheading, PublishContainer, Button, Switch, Card, Input, Pagination } from '@statamic/cms/ui';
 import { Pipeline, BeforeSaveHooks, Request, AfterSaveHooks } from '@statamic/cms/save-pipeline'; 
 import { router } from '@statamic/cms/inertia'
 import { computed, ref, watch } from 'vue'; 
@@ -12,7 +12,15 @@ const props = defineProps({
     items: Array,
     blacklist: Boolean,
     customView: String,
+    canManageSettings: Boolean,
+    modeSetByEnvironment: Boolean,
+    warnings: Array,
 });
+
+const problemLabels = {
+    'invalid': 'Not a single IP address, so it matches no visitor',
+    'non-standard': 'Not saved in standard form, so it may not match. Remove it and add it again',
+};
 
 const perPage = 10;
 const currentPage = ref(1);
@@ -30,16 +38,16 @@ const lastPage = computed(() => {
     return Math.ceil(itemsSliced.value.total / perPage);
 });
 
+const modeName = computed(() => blacklistValue.value ? 'Block-list mode' : 'Allow-list mode');
+
+const problemCount = computed(() => props.items.filter(item => item.problem).length);
+
 const itemsSliced = computed(() => {
     let temp = props.items;
 
     if (search.value?.length > 0) {
-        temp = temp.filter(item => {
-            // Convert all values to string and lower case for case-insensitive comparison
-            let tempArr = Object.values(item).map(value => value?.toString().toLowerCase());
-            // Check if any value includes the search string
-            return tempArr.some(value => value?.includes(search.value.toLowerCase()));
-        });
+        const term = search.value.toLowerCase();
+        temp = temp.filter(item => [item.ip, item.id].some(value => value?.toString().toLowerCase().includes(term)));
     }
 
     const start = (currentPage.value - 1) * perPage;
@@ -116,6 +124,7 @@ function blacklistChange() {
         preserveScroll: true, 
         onSuccess: () => {
             Statamic.$toast.success("Updated successfully!")
+            router.reload({ only: ['warnings', 'blacklist'] })
         },
         onError: (errors) => {
             showFirstError(errors);
@@ -157,14 +166,22 @@ watch(search, () => {
 
         <PublishContainer ref="container" :blueprint="blueprint" :meta="meta" v-model="values" :errors="errors" />
 
+        <Alert v-for="warning in warnings" :key="warning" variant="warning" :text="warning" class="mb-4" />
+
         <Card class="overflow-hidden p-0">
             <div class="mt-4 pb-2 px-4 flex items-center">
                 <div class="w-1/3 flex items-center gap-3">
-                    <Switch size="lg" v-model="blacklistValue" v-on:update:model-value="blacklistChange()" />
-                    <div class="ml-4 text-sm">Whitelist / Blacklist</div>
+                    <Switch v-if="canManageSettings" size="lg" v-model="blacklistValue" :disabled="modeSetByEnvironment" aria-label="Block-list mode" v-on:update:model-value="blacklistChange()" />
+                    <div class="text-sm">
+                        <div class="font-medium">{{ modeName }}</div>
+                        <div v-if="modeSetByEnvironment" class="text-gray-600">Set by ALT_INBOUND_MODE</div>
+                    </div>
                 </div>
                 <Input type="text" class="input-text w-1/3" v-model="search" placeholder="Search" />
             </div>
+            <p v-if="problemCount" class="px-4 pb-2 text-sm">
+                Entries saved by an earlier version that may not match visitors: {{ problemCount }}. These are listed first.
+            </p>
             <div class="px-2">
                 <table data-size="sm" tabindex="0" class="data-table" style="table-layout: fixed">
                     <thead>
@@ -176,9 +193,12 @@ watch(search, () => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="item in itemsSliced.data" :key="item.id" style="width : 100%; overflow: clip">
+                        <tr v-for="item in itemsSliced.data" :key="`${item.id}-${item.ip}`" style="width : 100%; overflow: clip">
                             <td>
                                 {{ item.ip }}
+                                <div v-if="item.problem" class="mt-1">
+                                    <Badge color="amber" size="sm" :text="problemLabels[item.problem]" />
+                                </div>
                             </td>
                             <td>
                                 <Button icon="trash" size="sm" @click="deleteRedirect(item.ip, item.id)" text="Remove" variant="danger" />
@@ -195,7 +215,7 @@ watch(search, () => {
         </Card>
 
         <div class="flex justify-between flex-wrap">
-            <Card class="w-full xl:w-1/3 card overflow-hidden p-0 mb-4 mt-4 mr-4 px-4 py-4">
+            <Card v-if="canManageSettings" class="w-full xl:w-1/3 card overflow-hidden p-0 mb-4 mt-4 mr-4 px-4 py-4">
                 <header>
                     <Heading>Custom Blocked View</Heading>
                     <Subheading>Pop your template path here to use a custom view. For example: <code>templates.blocked</code> or <code>templates/blocked</code></Subheading>

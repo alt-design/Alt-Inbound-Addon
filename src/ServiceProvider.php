@@ -47,14 +47,19 @@ class ServiceProvider extends AddonServiceProvider
     }
 
     /**
-     * Register the permission that controls who can see and manage the IP blocks.
+     * Register the permission that controls who can see and manage the IP blocks, and the one for the settings that
+     * affect every visitor.
      *
      * @return void
      */
     public function registerPermissions()
     {
-        Permission::register('view alt-inbound')
-            ->label('View and manage Alt Inbound IP blocks');
+        Permission::register('view alt-inbound', function ($permission) {
+            $permission->children([
+                Permission::make('manage alt-inbound settings')
+                    ->label('Change the Alt Inbound mode and blocked page'),
+            ]);
+        })->label('View and manage Alt Inbound IP blocks');
     }
 
     public function bootAddon()

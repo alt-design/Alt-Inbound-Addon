@@ -3,9 +3,11 @@
 use AltDesign\AltInbound\Helpers\BlockCsv;
 use AltDesign\AltInbound\Helpers\BlockedView;
 use AltDesign\AltInbound\Helpers\Data;
+use AltDesign\AltInbound\Helpers\Mode;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Statamic\Facades\User;
 use Statamic\Fields\BlueprintRepository;
@@ -16,6 +18,12 @@ class AltInboundController
 
     public function blacklist(Request $request)
     {
+        if (Mode::configured() !== null) {
+            throw ValidationException::withMessages([
+                'blacklist' => 'The mode is set by ALT_INBOUND_MODE in the site\'s environment, so it cannot be changed here.',
+            ]);
+        }
+
         $request->validate(['blacklist' => ['required', 'boolean']]);
 
         $blacklisting = $request->boolean('blacklist');
@@ -74,7 +82,7 @@ class AltInboundController
         // Pre-process the values.
         $fields = $fields->preProcess();
 
-        $blacklist = Data::whitelisting() ? false : true;
+        $allowListing = (bool) Data::whiteListing();
 
         // Reset the directory to the old one
 //        Blueprint::setDirectory($oldDirectory);
@@ -83,9 +91,12 @@ class AltInboundController
             'blueprint' => $blueprint->toPublishArray(),
             'initialValues' => $fields->values()->all(),
             'initialMeta' => $fields->meta()->all(),
-            'items' => $values,
-            'blacklist' => $blacklist,
+            'items' => $data->allWithProblems(),
+            'blacklist' => ! $allowListing,
             'customView' => Data::customView(),
+            'canManageSettings' => (bool) User::current()?->can('manage alt-inbound settings'),
+            'modeSetByEnvironment' => Mode::configured() !== null,
+            'warnings' => Mode::warnings($allowListing, count($values)),
         ]);
     }
 
@@ -113,7 +124,7 @@ class AltInboundController
         }
 
         $data = new Data('Inbound');
-        $values = $data->all();
+        $values = $data->allWithProblems();
 
         return [
             'data' => $values
@@ -131,7 +142,7 @@ class AltInboundController
         }
 
         $data = new Data('Inbound');
-        $values = $data->all();
+        $values = $data->allWithProblems();
 
         return redirect()->back()->with([
             'items' => $values,
@@ -173,7 +184,7 @@ class AltInboundController
         $data = new Data('Inbound');
 
         return redirect()->back()->with([
-            'items' => $data->all(),
+            'items' => $data->allWithProblems(),
         ]);
     }
 
