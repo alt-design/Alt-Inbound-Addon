@@ -11,10 +11,19 @@ export default ({
         items: Array,
         blacklistset: Number,
         customviewset: String,
+        canmanagesettings: Boolean,
+        modesetbyenvironment: Boolean,
+        initialwarnings: Array,
     },
     computed: {
         lastPage() {
             return Math.ceil(this.totalItems / this.perPage);
+        },
+        modeName() {
+            return this.blacklist ? 'Block-list mode' : 'Allow-list mode';
+        },
+        problemCount() {
+            return this.itemsReady.filter(item => item.problem).length;
         }
     },
     data() {
@@ -31,6 +40,11 @@ export default ({
             blacklist: 1,
             customView: '',
             savedCustomView: '',
+            warnings: [],
+            problemLabels: {
+                'invalid': 'Not a single IP address, so it matches no visitor',
+                'non-standard': 'Not saved in standard form, so it may not match. Remove it and add it again',
+            },
         }
     },
     watch: {
@@ -45,6 +59,7 @@ export default ({
         this.blacklist = this.blacklistset
         this.customView = this.customviewset || ''
         this.savedCustomView = this.customView
+        this.warnings = this.initialwarnings || []
         this.itemsReady = this.items
         this.totalItems = this.items.length
         this.sliceItems()
@@ -56,6 +71,7 @@ export default ({
         },
         updateItems(res) {
             this.itemsReady = res.data.data
+            this.warnings = res.data.warnings || this.warnings
             this.totalItems = res.data.data.length
             this.sliceItems()
             this.$forceUpdate()
@@ -68,12 +84,8 @@ export default ({
             let temp = this.itemsReady;
 
             if (this.search) {
-                temp = temp.filter(item => {
-                    // Convert all values to string and lower case for case-insensitive comparison
-                    let tempArr = Object.values(item).map(value => value.toString().toLowerCase());
-                    // Check if any value includes the search string
-                    return tempArr.some(value => value.includes(this.search.toLowerCase()));
-                });
+                const term = this.search.toLowerCase();
+                temp = temp.filter(item => [item.ip, item.id].some(value => value != null && value.toString().toLowerCase().includes(term)));
             }
 
             const start = (this.currentPage - 1) * this.perPage;
@@ -128,6 +140,8 @@ export default ({
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
+            }).then(res => {
+                this.warnings = res.data.warnings || this.warnings
             }).catch(err => {
                 this.showError(err)
                 this.blacklist = previous
@@ -157,17 +171,27 @@ export default ({
 
         <publish-form :title="title" :action="action" :blueprint="blueprint" :meta="meta" :values="values" @saved="updateItems($event)"></publish-form>
 
+        <div v-for="warning in warnings" :key="warning" class="py-3 px-4 mb-4 text-sm w-full rounded-md bg-yellow border border-yellow-dark dark:bg-dark-blue-100 dark:border-none" role="status">
+            {{ warning }}
+        </div>
+
         <div class="card overflow-hidden p-0">
             <div class="mt-4 pb-2 px-4 flex items-center">
                 <div class="w-1/3 flex items-center">
-                    <label class="switch">
-                        <input v-model="blacklist" type="checkbox" @click="blacklistChange()">
+                    <label v-if="canmanagesettings" class="switch">
+                        <input v-model="blacklist" type="checkbox" :disabled="modesetbyenvironment" aria-label="Block-list mode" @click="blacklistChange()">
                         <span class="slider round"></span>
                     </label>
-                    <div class="ml-4 text-sm">Whitelist / Blacklist</div>
+                    <div class="text-sm" :class="{ 'ml-4': canmanagesettings }">
+                        <div class="font-semibold">{{ modeName }}</div>
+                        <div v-if="modesetbyenvironment" class="text-gray-700">Set by ALT_INBOUND_MODE</div>
+                    </div>
                 </div>
                 <input type="text" class="input-text w-1/3" v-model="search" placeholder="Search">
             </div>
+            <p v-if="problemCount" class="px-4 pb-2 text-sm">
+                Entries saved by an earlier version that may not match visitors: {{ problemCount }}. These are listed first.
+            </p>
             <div class="px-2">
                 <table data-size="sm" tabindex="0" class="data-table" style="table-layout: fixed">
                 <thead>
@@ -179,9 +203,10 @@ export default ({
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="item in itemsSliced" :key="item.id" style="width : 100%; overflow: clip">
+                    <tr v-for="item in itemsSliced" :key="`${item.id}-${item.ip}`" style="width : 100%; overflow: clip">
                         <td>
                             {{ item.ip }}
+                            <div v-if="item.problem" class="mt-1 text-xs text-red-700">{{ problemLabels[item.problem] }}</div>
                         </td>
                         <td>
                             <button @click="deleteRedirect(item.ip, item.id)" class="btn"
@@ -244,7 +269,7 @@ export default ({
         </div>
 
         <div class="flex justify-between flex-wrap">
-            <div class="w-full card overflow-hidden p-0 mb-4 mt-4 px-4 py-4">
+            <div v-if="canmanagesettings" class="w-full card overflow-hidden p-0 mb-4 mt-4 px-4 py-4">
                 <span class="font-semibold mb-2">Custom Blocked View</span><br>
                 <p class="text-sm mb-4">Pop your template path here to use a custom view. For example: <code>templates.blocked</code> or <code>templates/blocked</code></p>
 

@@ -12,6 +12,9 @@
             :items="{{ json_encode($data) }}"
             :blacklistset="{{$blacklist}}"
             :customviewset='@json($customView)'
+            :canmanagesettings='@json($canManageSettings)'
+            :modesetbyenvironment='@json($modeSetByEnvironment)'
+            :initialwarnings='@json($warnings)'
         ></alt-inbound>
     </div>
 @endsection
